@@ -71,7 +71,7 @@ with tab1:
         poids_in = c2.number_input("Poids (kg)", min_value=0.0, step=0.5, value=45.0)
         
         st.divider()
-                st.write("📸 **Capture Optique & Morphométrie**")
+        st.write("📸 **Capture Optique & Morphométrie**")
         
         # On donne presque toute la place à la photo (ratio 0.1 / 0.8 / 0.1)
         cv1, c_photo, cv2 = st.columns([0.1, 0.8, 0.1])
