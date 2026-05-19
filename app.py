@@ -37,6 +37,22 @@ def get_next_id(df):
 
 # --- INTERFACE ---
 st.title("🐑 OviStat Vision Pro : Intelligence Augmentée")
+# --- STYLE POUR AGRANDIR LA CAMÉRA ---
+st.markdown("""
+    <style>
+    /* Force la vidéo de la caméra à prendre toute la largeur du conteneur */
+    div[data-testid="stCameraInput"] video {
+        width: 100% !important;
+        height: auto !important;
+        border-radius: 15px;
+        border: 2px solid #1f77b4;
+    }
+    /* Centre le bouton de capture sous la vidéo */
+    div[data-testid="stCameraInput"] button {
+        width: 100% !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 tab1, tab2, tab3 = st.tabs(["📥 Saisie IA & Ration", "🔍 Historique Complet", "📊 Analyse Comparative"])
 
@@ -55,10 +71,14 @@ with tab1:
         poids_in = c2.number_input("Poids (kg)", min_value=0.0, step=0.5, value=45.0)
         
         st.divider()
-        st.write("📸 **Capture Optique & Morphométrie**")
-        cv1, c_photo, cv2 = st.columns([1,2,1])
+                st.write("📸 **Capture Optique & Morphométrie**")
+        
+        # On donne presque toute la place à la photo (ratio 0.1 / 0.8 / 0.1)
+        cv1, c_photo, cv2 = st.columns([0.1, 0.8, 0.1])
+        
         with c_photo:
-            photo = st.camera_input("Scanner l'animal")
+            photo = st.camera_input("Scanner l'animal") 
+
         
         # Variables IA par défaut
         taille_ia, peri_ia, note_ia, count_ia, alerte = 0.0, 0.0, 0.0, 0, "Non détecté"
