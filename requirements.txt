@@ -1,4 +1,8 @@
 streamlit
 pandas
 matplotlib
+ultralytics
+opencv-python-headless
+Pillow
+
 
