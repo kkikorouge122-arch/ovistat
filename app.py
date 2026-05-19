@@ -93,10 +93,24 @@ with tab1:
 
         # SAISIE MANUELLE (Toujours visible et pré-remplie par l'IA)
         st.write("📏 **Vérification des Mensurations**")
-        cm1, cm2, cm3 = st.columns(3)
-        poids_f = cm1.number_input("Poids final (kg)", min_value=0.0, value=45.0, step=0.5)
-        taille_f = cm2.number_input("Hauteur finale (cm)", min_value=0.0, value=float(taille_ia), step=0.5)
-        peri_f = cm3.number_input("Périmètre final (cm)", min_value=0.0, value=float(peri_ia), step=0.5)
+        cm1, cm2, cm3, cm4, cm5, cm6,cm7, cm8, cm9, cm10, cm11, cm12,cm13, cm14, cm15, cm16, cm17 = st.columns(17)
+           HG = cm1.number_input("Hauteur_G (cm)", min_value=0.0, value=0.0)
+           HS = cm2.number_input("Hauteur_S (cm)", min_value=0.0, value=0.0)
+           LB = cm3.number_input("Longueur_B (cm)", min_value=0.0, value=0.0)
+           LQ = cm4.number_input("Longueur_Q (cm)", min_value=0.0, value=0.0)
+           LT = cm5.number_input("Longueur_T (cm)", min_value=0.0, value=0.0)
+           LC = cm6.number_input("Longueur_C (cm)", min_value=0.0, value=0.0)
+           LH = cm7.number_input("Longueur_H (cm)", min_value=0.0, value=0.0)
+           LI = cm8.number_input("Longueur_I (cm)", min_value=0.0, value=0.0)
+           LP = cm9.number_input("Longueur_P (cm)", min_value=0.0, value=0.0)
+           TP = cm10.number_input("Taille_P (cm)", min_value=0.0, value=0.0)
+           Lt = cm11.number_input("Longueur_t (cm)", min_value=0.0, value=0.0)
+           LO = cm12.number_input("Longueur_O (cm)", min_value=0.0, value=0.0)
+           Lo = cm13.number_input("Longueur_o (cm)", min_value=0.0, value=0.0)
+           TC = cm14.number_input("Taille_C (cm)", min_value=0.0, value=0.0)
+           LY = cm15.number_input("Longueur_Y (cm)", min_value=0.0, value=0.0)
+           TS = cm16.number_input("Taille_S (cm)", min_value=0.0, value=0.0)
+           LG = cm17.number_input("Longueur_G (cm)", min_value=0.0, value=0.0)
         
         # CALCUL RATION
         ration_ms = round(poids_f * 0.035, 2)
@@ -107,7 +121,8 @@ with tab1:
             if id_in:
                 date_now = datetime.now().strftime("%Y-%m-%d")
                 nouvelle_ligne = pd.DataFrame([[
-                    date_now, id_in, race_in, poids_f, taille_f, peri_f, note_ia, count_ia, ration_ms
+                   date_now, id_in, race_in, Hauteur_G, Hauteur_S, Longueur_B, Longueur_Q, Longueur_T, Longueur_C, Longueur_H, Longueur_I, Longueur_P, Taille_P, Longueur_t,
+                   Longueur_O, Longueur_o, Taille_C, Longueur_Y, Taille_S, Longueur_G,
                 ]], columns=COLONNES)
                 
                 nouvelle_ligne.to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
