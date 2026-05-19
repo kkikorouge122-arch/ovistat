@@ -124,16 +124,29 @@ with tab2:
         st.download_button("📥 Télécharger CSV", csv_data, "donnees_ovins.csv", "text/csv")
 
 with tab3:
-    if len(data["ID"].unique()) >= 2:
+    if not data.empty and len(data["ID"].unique()) >= 2:
         ani1 = st.selectbox("Animal A", data["ID"].unique(), index=0)
         ani2 = st.selectbox("Animal B", data["ID"].unique(), index=1)
+        
         df1 = data[data["ID"] == ani1]
         df2 = data[data["ID"] == ani2]
         
-        fig, ax = plt.subplots()
-        ax.bar([ani1, ani2], [df1["HG"].iloc[-1], df2["HG"].iloc[-1]], color=['blue', 'orange'])
-        ax.set_ylabel("Hauteur Garrot (cm)")
-        st.pyplot(fig)
+        # On vérifie si la colonne HG existe bien avant de dessiner
+        if "HG" in data.columns:
+            fig, ax = plt.subplots()
+            # On prend la dernière mesure pour chaque animal
+            val1 = df1["HG"].iloc[-1] if not df1.empty else 0
+            val2 = df2["HG"].iloc[-1] if not df2.empty else 0
+            
+            ax.bar([ani1, ani2], [val1, val2], color=['#1f77b4', '#ff7f0e'])
+            ax.set_ylabel("Hauteur Garrot (HG) en cm")
+            ax.set_title("Comparaison des Hauteurs")
+            st.pyplot(fig)
+        else:
+            st.error("⚠️ Les nouvelles colonnes (HG, HS...) ne sont pas encore présentes dans votre fichier CSV. Allez dans 'Maintenance' et videz la base.")
+    else:
+        st.warning("Veuillez enregistrer au moins 2 animaux avec les nouvelles mesures.")
+
 
 with st.expander("⚙️ Maintenance"):
     if st.button("🗑️ Vider la base"):
