@@ -62,7 +62,7 @@ with tab1:
         # IDENTIFICATION
         c1, c2 = st.columns(2)
         id_in = c1.text_input("🆔 ID Animal", value=get_next_id(data))
-        race_in = c2.selectbox("🧬 Race", ["Ouled Djellal", "Rembi", "Hamra"])
+        race_in = c2.selectbox("🧬 Race", ["Ouled Djellal", "Hamra" , "Taadmit"])
         
         st.divider()
         
