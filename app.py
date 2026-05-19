@@ -22,6 +22,7 @@ def load_yolo_model():
 
 model = load_yolo_model()
 
+# 1. INITIALISATION DU FICHIER (Vérifiez bien cette partie)
 if not os.path.exists(DB_FILE):
     df_init = pd.DataFrame(columns=COLONNES)
     df_init.to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
