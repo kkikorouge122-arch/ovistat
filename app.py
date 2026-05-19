@@ -3,20 +3,21 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 from datetime import datetime, date
-#from ultralytics import YOLO
+from ultralytics import YOLO
 from PIL import Image
 
 # --- CONFIGURATION ---
 st.set_page_config(page_title="OviStat Vision Pro", layout="wide")
 DB_FILE = "data_ovins_final.csv"
-# Base de données enrichie
 COLONNES = ["Date", "ID", "Race", "Poids_kg", "Taille_cm", "Perimetre_cm", "Note_IA", "Comptage", "Ration_MS"]
 
-#@st.cache_resource
-#def load_yolo_model():
-   # return YOLO('yolov8n.pt')
+# Chargement intelligent du modèle IA
+@st.cache_resource
+def load_yolo_model():
+    # Modèle 'nano' : rapide et léger pour le Cloud
+    return YOLO('yolov8n.pt')
 
-#model = load_yolo_model()
+model = load_yolo_model()
 
 # 1. INITIALISATION DU FICHIER
 if not os.path.exists(DB_FILE):
@@ -50,7 +51,7 @@ with tab1:
         id_in = c1.text_input("ID Animal", value=get_next_id(data))
         race_in = c1.selectbox("Race", ["Ouled Djellal", "Rembi", "Hamra"])
         
-        # Paramètres (seront complétés par l'IA)
+        # Paramètres
         poids_in = c2.number_input("Poids (kg)", min_value=0.0, step=0.5, value=45.0)
         
         st.divider()
@@ -60,14 +61,31 @@ with tab1:
             photo = st.camera_input("Scanner l'animal")
         
         # Variables IA par défaut
-        taille_ia, peri_ia, note_ia, count_ia = 0.0, 0.0, 0.0, 1
+        taille_ia, peri_ia, note_ia, count_ia, alerte = 0.0, 0.0, 0.0, 0, "Non détecté"
         
         if photo:
-            # Simulation détection YOLO + Morphométrie
-            taille_ia = 68.0  # Estimation IA
-            peri_ia = 82.5    # Estimation IA
-            note_ia = 4.0     # Score corporel
-            st.success(f"✅ IA : Taille {taille_ia}cm | Périmètre {peri_ia}cm | Note {note_ia}/5")
+            # --- ANALYSE RÉELLE PAR YOLO ---
+            img = Image.open(photo)
+            results = model(img)
+            
+            # Vérifier si un mouton (classe 18) est présent
+            detection_reussie = False
+            for r in results:
+                for box in r.boxes:
+                    if int(box.cls) == 18:
+                        detection_reussie = True
+                        count_ia += 1
+            
+            if detection_reussie:
+                # Simulation morphométrie (Basée sur la détection réussie)
+                taille_ia = 68.0  
+                peri_ia = 82.5    
+                note_ia = 4.0     
+                alerte = "Normal"
+                st.success(f"✅ IA : Ovin détecté | Taille {taille_ia}cm | Note {note_ia}/5")
+            else:
+                st.warning("⚠️ Aucun ovin détecté. L'IA n'a pas pu valider la morphologie.")
+                alerte = "Échec détection"
         
         # --- CALCUL RATION ---
         ration_ms = round(poids_in * 0.035, 2)
@@ -91,30 +109,35 @@ with tab2:
     st.subheader("🔍 Base de données enrichie")
     if not data.empty:
         st.dataframe(data, use_container_width=True)
-        st.download_button("📥 Télécharger Excel (CSV)", data.to_csv(sep=';').encode('utf-8-sig'), "donnees_ovins.csv", "text/csv")
+        csv_data = data.to_csv(sep=';', index=False).encode('utf-8-sig')
+        st.download_button("📥 Télécharger Excel (CSV)", csv_data, "donnees_ovins.csv", "text/csv")
     else:
         st.info("Aucune donnée.")
 
 # --- ONGLET 3 : ANALYSE ---
 with tab3:
-    if len(data["ID"].unique()) >= 2:
-        ani1 = st.selectbox("Animal A", data["ID"].unique(), index=0)
-        ani2 = st.selectbox("Animal B", data["ID"].unique(), index=1)
+    ids_dispo = data["ID"].unique()
+    if len(ids_dispo) >= 2:
+        ani1 = st.selectbox("Animal A", ids_dispo, index=0)
+        ani2 = st.selectbox("Animal B", ids_dispo, index=1)
         
         df1 = data[data["ID"] == ani1].sort_values("Date")
         df2 = data[data["ID"] == ani2].sort_values("Date")
 
         fig, ax = plt.subplots(figsize=(10, 4))
-        ax.plot(df1["Date"], df1["Poids_kg"], label=f"{ani1} (Poids)", marker='o')
-        ax.plot(df2["Date"], df2["Poids_kg"], label=f"{ani2} (Poids)", marker='s')
-        ax.set_ylabel("kg")
+        ax.plot(df1["Date"], df1["Poids_kg"], label=f"{ani1}", marker='o', linewidth=2)
+        ax.plot(df2["Date"], df2["Poids_kg"], label=f"{ani2}", marker='s', linestyle='--', linewidth=2)
+        ax.set_ylabel("Poids (kg)")
+        ax.set_title("Comparaison de Croissance")
         ax.legend()
+        plt.xticks(rotation=45)
         st.pyplot(fig)
     else:
-        st.warning("Enregistrez 2 animaux pour comparer.")
+        st.warning("Veuillez enregistrer au moins 2 animaux différents pour comparer.")
 
 # --- MAINTENANCE ---
 with st.expander("⚙️ Maintenance"):
     if st.button("🗑️ Vider tout"):
         if os.path.exists(DB_FILE): os.remove(DB_FILE)
         st.rerun()
+
