@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 from datetime import datetime, date
-from ultralytics import YOLO
+#from ultralytics import YOLO
 from PIL import Image
 
 # --- CONFIGURATION ---
@@ -12,11 +12,11 @@ DB_FILE = "data_ovins_final.csv"
 # Base de données enrichie
 COLONNES = ["Date", "ID", "Race", "Poids_kg", "Taille_cm", "Perimetre_cm", "Note_IA", "Comptage", "Ration_MS"]
 
-@st.cache_resource
-def load_yolo_model():
-    return YOLO('yolov8n.pt')
+#@st.cache_resource
+#def load_yolo_model():
+   # return YOLO('yolov8n.pt')
 
-model = load_yolo_model()
+#model = load_yolo_model()
 
 # 1. INITIALISATION DU FICHIER
 if not os.path.exists(DB_FILE):
