@@ -14,29 +14,33 @@ st.set_page_config(
     layout="wide", # Utilise toute la largeur de l'écran
     initial_sidebar_state="collapsed" # Cache la barre latérale au départ
 )
+# --- STYLE POUR CAMÉRA PLEIN CADRE ---
 st.markdown("""
     <style>
-    /* Supprimer l'espace vide en haut de la page */
-    .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 0rem !important;
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
+    /* Force la vidéo à remplir tout le cadre bleu */
+    div[data-testid="stCameraInput"] video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important; /* L'image remplit tout le rectangle */
+        border-radius: 15px;
+        border: 3px solid #1f77b4;
     }
     
-    /* Cacher le menu Streamlit en haut à droite pour gagner de la place */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    
-    /* Forcer le plein écran sur smartphone */
-    @media (max-width: 640px) {
-        .main .block-container {
-            padding: 0.5rem !important;
-        }
+    /* Ajuste la hauteur du cadre pour qu'il soit plus grand sur mobile */
+    div[data-testid="stCameraInput"] {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Centre et agrandit le bouton de capture */
+    div[data-testid="stCameraInput"] button {
+        width: 100% !important;
+        background-color: #1f77b4 !important;
+        color: white !important;
     }
     </style>
     """, unsafe_allow_html=True)
+
 
 
 DB_FILE = "data_ovinstat_V5.csv"
