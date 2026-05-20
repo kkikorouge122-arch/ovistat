@@ -152,47 +152,70 @@ with tab2:
 
 
 with tab3:
-    st.subheader("🧠 Scores et Indices Zootechniques")
+    st.header("🧠 Expertise & Benchmark Zootechnique")
     
     if not data.empty:
-        target = st.selectbox("Sélectionner l'animal pour l'audit", data["ID"].unique())
-        anim = data[data["ID"] == target].iloc[-1] # On prend la dernière mesure
+        # 1. SÉLECTION DE L'ANIMAL
+        target = st.selectbox("Sélectionner l'animal pour l'audit complet", data["ID"].unique())
+        anim = data[data["ID"] == target].iloc[-1] 
         
-        # --- CALCULS DES INDICES ---
-        # On utilise des 'try/except' pour éviter les erreurs si une valeur est à 0
+        # --- PARTIE A : SCORES INDIVIDUELS (VOTRE CODE) ---
+        st.subheader("🥇 Scores Individuels")
         try:
-            indice_compacite = anim['Poids_kg'] / anim['LB'] if anim['LB'] > 0 else 0
+            # Note : Assurez-vous que les noms de colonnes 'Poids_kg', 'LB', 'TP', 'HG' correspondent à votre CSV
+            poids_val = anim['Poids_kg'] if 'Poids_kg' in anim else 0
+            indice_compacite = poids_val / anim['LB'] if anim['LB'] > 0 else 0
             indice_anamorphose = (anim['TP']**2) / anim['HG'] if anim['HG'] > 0 else 0
             indice_proportion = anim['HG'] / anim['LB'] if anim['LB'] > 0 else 0
             
-            # --- AFFICHAGE DES SCORES ---
             c1, c2, c3 = st.columns(3)
-            
             with c1:
                 st.metric("Rendement Viande", f"{indice_compacite:.2f}")
                 st.caption("Indice de Compacité")
-                
             with c2:
                 st.metric("Robustesse", f"{indice_anamorphose:.2f}")
                 st.caption("Indice d'Anamorphose")
-                
             with c3:
-                # Interprétation du format
                 format_animal = "Longiligne" if indice_proportion < 0.95 else "Médioligne"
                 st.metric("Format", format_animal)
                 st.caption(f"Ratio HG/LB: {indice_proportion:.2f}")
 
-            st.divider()
-            
-            # --- CONSEIL DE L'IA ---
+            # Conseil IA basé sur l'individu
             if indice_compacite < 0.5:
-                st.warning("💡 **Conseil IA :** Animal un peu frêle. Augmenter la part énergétique de la ration.")
+                st.warning("💡 **Conseil Individuel :** Animal un peu frêle. Surveiller l'alimentation.")
             else:
-                st.success("💡 **Conseil IA :** Excellente conformation bouchère. Potentiel reproducteur élevé.")
+                st.success("💡 **Conseil Individuel :** Excellente conformation bouchère.")
 
         except Exception as e:
-            st.error(f"Mesures incomplètes pour le calcul des indices : {e}")
+            st.error(f"Données insuffisantes pour les indices : {e}")
+
+        st.divider()
+
+        # --- PARTIE B : BENCHMARK (COMPARAISON AU GROUPE) ---
+        if len(data) >= 2:
+            st.subheader(f"📊 Position de {target} par rapport au troupeau")
+            
+            moyenne_poids = data['Poids_kg'].mean()
+            diff_poids = ((poids_val - moyenne_poids) / moyenne_poids) * 100 if moyenne_poids > 0 else 0
+            
+            col_b1, col_b2 = st.columns(2)
+            with col_b1:
+                st.metric("Performance Poids", f"{poids_val} kg", f"{diff_poids:.1f}% vs Moyenne")
+            with col_b2:
+                # Classement
+                rang = data['Poids_kg'].rank(ascending=False).iloc[-1]
+                st.metric("Rang", f"{int(rang)} / {len(data)}")
+
+            # Graphique de Distribution
+            fig, ax = plt.subplots(figsize=(10, 3))
+            ax.hist(data['Poids_kg'], bins=10, color='#d1dceb', edgecolor='#1f77b4', alpha=0.7)
+            ax.axvline(poids_val, color='red', linestyle='--', label=f"{target}")
+            ax.axvline(moyenne_poids, color='green', linestyle='-', label="Moyenne")
+            ax.set_xlabel("Poids (kg)")
+            ax.legend()
+            st.pyplot(fig)
+        else:
+            st.info("💡 Les statistiques de groupe apparaîtront quand vous aurez au moins 2 animaux.")
+            
     else:
         st.info("📊 Les analyses apparaîtront après le premier enregistrement.")
-
-
