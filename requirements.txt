@@ -4,5 +4,6 @@ matplotlib
 ultralytics
 opencv-python-headless
 Pillow
+fpdf
 
 
