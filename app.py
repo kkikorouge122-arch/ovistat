@@ -6,6 +6,9 @@ from datetime import datetime, date
 from ultralytics import YOLO
 from PIL import Image
 
+st.sidebar.write(f"📁 Fichier actuel : {DB_FILE}")
+st.sidebar.write(f"📊 Nombre de lignes : {len(data)}")
+
 # --- CONFIGURATION ---
 st.set_page_config(page_title="OviStat Vision Pro", layout="wide")
 # Changez juste le nom du fichier (ajoutez un 'v2' par exemple)
