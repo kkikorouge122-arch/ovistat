@@ -137,4 +137,4 @@ with st.expander("⚙️ Maintenance"):
     if st.button("🗑️ Vider la base"):
         if os.path.exists(DB_FILE): os.remove(DB_FILE)
         st.rerun()
- : {os.getcwd()}")
+        : {os.getcwd()}")
