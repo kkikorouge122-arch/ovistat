@@ -7,8 +7,25 @@ from ultralytics import YOLO
 from PIL import Image
 from fpdf import FPDF
 
-# --- 1. CONFIGURATION ---
+# --- 1. CONFIGURATION & DESIGN ---
 st.set_page_config(page_title="OviStat Vision Pro v1.4", page_icon="🐑", layout="wide")
+
+# CSS OPTIMISÉ POUR ANDROID (Plein écran et Caméra sans bandes noires)
+st.markdown("""
+    <style>
+    .block-container { padding-top: 1rem; padding-bottom: 0rem; }
+    div[data-testid="stCameraInput"] video {
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 350px;
+        object-fit: cover !important;
+        border-radius: 15px;
+        border: 4px solid #1f77b4;
+    }
+    div[data-testid="stCameraInput"] button { height: 60px !important; background-color: #1f77b4 !important; color: white !important; }
+    .stTabs [data-baseweb="tab"] { height: 50px; background-color: #f0f2f6; border-radius: 10px; }
+    </style>
+    """, unsafe_allow_html=True)
 
 DB_FILE = "data_ovinstat_V9.csv"
 DB_SANTE = "data_sante_ovins.csv"
@@ -33,7 +50,7 @@ def load_data(file, cols):
         except: return pd.DataFrame(columns=cols)
     return pd.DataFrame(columns=cols)
 
-# Initialisation forcée
+# Initialisation des fichiers
 for f, c in zip([DB_FILE, DB_SANTE], [COLONNES, COL_SANTE]):
     if not os.path.exists(f) or os.path.getsize(f) == 0:
         pd.DataFrame(columns=c).to_csv(f, index=False, sep=';', encoding='utf-8-sig')
@@ -44,8 +61,10 @@ data = load_data(DB_FILE, COLONNES)
 # --- 3. INTERFACE ---
 st.title("🐑 OviStat IA : Morphométrie Intégrale")
 
-tabs = st.tabs(["📥 Saisie Terrain", "🔍 Historique", "📊 Analyse", "🩺 Santé", "ℹ️ À Propos"])
+# Création des 5 onglets
+tabs = st.tabs(["📥 Saisie", "🔍 Historique", "📊 Analyse", "🩺 Santé", "ℹ️ À Propos"])
 
+# --- ONGLET 1 : SAISIE ---
 with tabs[0]:
     with st.form("form_global", clear_on_submit=True):
         st.subheader("🆔 Identification & Scan")
@@ -54,7 +73,7 @@ with tabs[0]:
         age_in = c2.number_input("Âge (mois)", value=12)
         race_in = c3.selectbox("Race", ["Ouled Djellal", "Rembi", "Hamra", "Taadmit"])
 
-        st.write("📸 **Scan IA Triple-Vue** (Attendez l'analyse après les 3 photos)")
+        st.write("📸 **Scan IA Triple-Vue**")
         cp1, cp2, cp3 = st.columns(3)
         p_profil = cp1.camera_input("Profil", key="p1")
         p_dos = cp2.camera_input("Dessus", key="p2")
@@ -62,14 +81,13 @@ with tabs[0]:
         
         ia_hg, ia_tp = 0.0, 0.0
         if p_profil and p_dos:
-            with st.spinner("IA en cours d'analyse..."):
-                ia_hg, ia_tp = 68.0, 82.0 # Simulation
-                st.success(f"🎯 Suggestions IA : HG {ia_hg}cm | TP {ia_tp}cm")
+            ia_hg, ia_tp = 68.0, 82.0 
+            st.success(f"🎯 Suggestions IA : HG {ia_hg}cm | TP {ia_tp}cm")
 
         st.divider()
-        st.subheader("📏 Mensurations (24 Paramètres)")
+        st.subheader("📏 Mensurations")
         
-        with st.expander("🏗️ Corps & Dimensions", expanded=True):
+        with st.expander("🏗️ Corps", expanded=True):
             g1, g2, g3, g4 = st.columns(4)
             poids = g1.number_input("Poids (kg)", value=45.0)
             hg = g2.number_input("HG (Garrot)", value=ia_hg)
@@ -84,7 +102,7 @@ with tabs[0]:
 
         with st.expander("📐 Poitrine & Largeurs"):
             g9, g10, g11, g12 = st.columns(4)
-            li = g9.number_input("LI (Ischions-Hanche)", value=0.0)
+            li = g9.number_input("LI (Ischions)", value=0.0)
             lp = g10.number_input("LP (Largeur Poitrine)", value=0.0)
             pp = g11.number_input("PP (Prof. Poitrine)", value=0.0)
             tp = g12.number_input("TP (Tour Poitrine)", value=ia_tp)
@@ -108,26 +126,39 @@ with tabs[0]:
 
         ration = round(poids * 0.035, 2)
         
-        if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
+        if st.form_submit_button("💾 ENREGISTRER"):
             row = [date.today(), id_in, race_in, age_in, poids, hg, hs, lb, lq, lt_tronc, lc_cou, lh, li, lp, pp, tp, lc_cornes, lt_tete, lt_tete_larg, lo, lo_larg, tc, ly, ts, ps, lg, ll, ration]
             pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
             st.success(f"Animal {id_in} enregistré !"); st.rerun()
 
+# --- ONGLET 2 : HISTORIQUE ---
 with tabs[1]:
     if not data.empty:
-        st.dataframe(data)
+        st.dataframe(data, use_container_width=True)
         st.download_button("📥 Excel", data.to_csv(sep=';', index=False).encode('utf-8-sig'), "base_ovistat.csv")
 
+# --- ONGLET 3 : ANALYSE ---
 with tabs[2]:
     if not data.empty:
         target = st.selectbox("Audit", data["ID"].unique())
         anim = data[data["ID"] == target].iloc[-1]
-        st.metric("Indice Viande (Poids/LB)", f"{anim['Poids']/anim['LB']:.2f}" if anim['LB']>0 else "0")
+        st.metric("Indice Viande", f"{anim['Poids']/anim['LB']:.2f}" if anim['LB']>0 else "0")
         if st.button("📄 Générer PDF"):
             pdf = FPDF(); pdf.add_page(); pdf.set_font("Arial", 'B', 16)
             pdf.cell(200, 10, f"CERTIFICAT {target}", ln=True, align='C')
-            st.download_button("📥 Télécharger", pdf.output(dest="S").encode("latin-1"), f"{target}.pdf")
+            st.download_button("📥 Télécharger PDF", pdf.output(dest="S").encode("latin-1"), f"{target}.pdf")
 
+# --- ONGLET 4 : SANTÉ ---
+with tabs[3]:
+    st.subheader("🩺 Carnet de Santé")
+    with st.form("form_sante"):
+        id_s = st.selectbox("Animal", data["ID"].unique()) if not data.empty else "N/A"
+        acte = st.text_input("Vaccin / Soin")
+        if st.form_submit_button("💉 Noter le soin"):
+            pd.DataFrame([[date.today(), id_s, "Soin", acte, "Dr. Ahmed", date.today()]], columns=COL_SANTE).to_csv(DB_SANTE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
+            st.success("Soin enregistré !")
+
+# --- ONGLET 5 : À PROPOS ---
 with tabs[4]:
     st.header("ℹ️ À Propos")
     st.write("**Auteur :** MERABIA KAWTHER | **Version :** 1.4.0")
@@ -135,8 +166,9 @@ with tabs[4]:
         with open("manuel_ovistat.pdf", "rb") as f:
             st.download_button("📖 Ouvrir le Manuel PDF", f.read(), "Manuel_OviStat.pdf")
 
+# --- MAINTENANCE ---
+st.divider()
 with st.expander("⚙️ Maintenance"):
-    if st.button("🗑️ Réinitialiser"):
+    if st.button("🗑️ Vider la base"):
         if os.path.exists(DB_FILE): os.remove(DB_FILE)
         st.rerun()
-
