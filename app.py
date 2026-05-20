@@ -163,16 +163,21 @@ with tab3:
     st.header("🧠 Expertise & Benchmark Zootechnique")
     
     if not data.empty:
-        # 1. SÉLECTION DE L'ANIMAL (C'est ici que 'target' est créé)
+        # 1. SÉLECTION DE L'ANIMAL
         target = st.selectbox("Sélectionner l'animal pour l'audit complet", data["ID"].unique())
         anim = data[data["ID"] == target].iloc[-1] 
         
         # --- PARTIE A : SCORES INDIVIDUELS ---
         st.subheader("🥇 Scores Individuels")
+        
+        # Initialisation par défaut pour éviter les NameError
+        poids_val = anim['Poids'] if 'Poids' in anim else 0
+        indice_compacite = 0.0
+        indice_anamorphose = 0.0
+        indice_proportion = 0.0
+        rang = 1 # Par défaut
+        
         try:
-            # Vérification des noms de colonnes
-            poids_val = anim['Poids'] if 'Poids' in anim else 0
-            # Formules Zootechniques
             indice_compacite = poids_val / anim['LB'] if anim['LB'] > 0 else 0
             indice_anamorphose = (anim['TP']**2) / anim['HG'] if anim['HG'] > 0 else 0
             indice_proportion = anim['HG'] / anim['LB'] if anim['LB'] > 0 else 0
@@ -185,14 +190,8 @@ with tab3:
             with c3:
                 format_animal = "Longiligne" if indice_proportion < 0.95 else "Médioligne"
                 st.metric("Format", format_animal)
-
-            if indice_compacite < 0.5:
-                st.warning("💡 **Conseil :** Animal un peu frêle.")
-            else:
-                st.success("💡 **Conseil :** Excellente conformation.")
-
         except Exception as e:
-            st.error(f"Données insuffisantes pour les indices : {e}")
+            st.error(f"Erreur calcul indices : {e}")
 
         st.divider()
 
@@ -202,16 +201,20 @@ with tab3:
             moyenne_poids = data['Poids'].mean()
             diff_poids = ((poids_val - moyenne_poids) / moyenne_poids) * 100 if moyenne_poids > 0 else 0
             
+            # Calcul du rang réel
+            rang = data['Poids'].rank(ascending=False).iloc[data[data["ID"] == target].index[-1]]
+            
             col_b1, col_b2 = st.columns(2)
             with col_b1:
                 st.metric("Performance Poids", f"{poids_val} kg", f"{diff_poids:.1f}% vs Moyenne")
             with col_b2:
-                rang = data['Poids'].rank(ascending=False).iloc[-1]
                 st.metric("Rang", f"{int(rang)} / {len(data)}")
+        else:
+            st.info("💡 Ajoutez un deuxième animal pour voir le classement (Rang).")
 
         st.divider()
 
-        # --- PARTIE C : GÉNÉRATION DU CERTIFICAT (À l'intérieur du IF) ---
+        # --- PARTIE C : GÉNÉRATION DU CERTIFICAT ---
         st.subheader("📄 Certificat Officiel")
         if st.button(f"Générer le certificat pour {target}"):
             pdf = FPDF()
@@ -219,10 +222,12 @@ with tab3:
             pdf.set_font("Arial", 'B', 16)
             pdf.cell(200, 10, "CERTIFICAT DE QUALITÉ OVISTAT IA", ln=True, align='C')
             pdf.ln(10)
+            
             pdf.set_font("Arial", '', 12)
             pdf.cell(0, 10, f"ID Animal : {target}", ln=True)
             pdf.cell(0, 10, f"Race : {anim['Race']}", ln=True)
             pdf.cell(0, 10, f"Indice Compacité : {indice_compacite:.2f}", ln=True)
+            # Utilisation sécurisée de rang (soit 1, soit le calcul réel)
             pdf.cell(0, 10, f"Rang Troupeau : {int(rang)} / {len(data)}", ln=True)
             
             pdf_bytes = pdf.output(dest="S").encode("latin-1")
@@ -230,4 +235,3 @@ with tab3:
             
     else:
         st.info("📊 Les analyses apparaîtront après le premier enregistrement.")
-
