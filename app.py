@@ -8,7 +8,36 @@ from PIL import Image
 from fpdf import FPDF
 
 # --- 1. CONFIGURATION & VARIABLES ---
-st.set_page_config(page_title="OviStat Vision Pro v1.2", layout="wide")
+st.set_page_config(
+    page_title="OviStat Vision Pro",
+    page_icon="🐑",
+    layout="wide", # Utilise toute la largeur de l'écran
+    initial_sidebar_state="collapsed" # Cache la barre latérale au départ
+)
+st.markdown("""
+    <style>
+    /* Supprimer l'espace vide en haut de la page */
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 0rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    
+    /* Cacher le menu Streamlit en haut à droite pour gagner de la place */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Forcer le plein écran sur smartphone */
+    @media (max-width: 640px) {
+        .main .block-container {
+            padding: 0.5rem !important;
+        }
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 
 DB_FILE = "data_ovinstat_V5.csv"
 DB_SANTE = "data_sante_ovins.csv"
