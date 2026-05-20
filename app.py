@@ -6,6 +6,10 @@ from datetime import datetime, date
 from ultralytics import YOLO
 from PIL import Image
 
+# 1. DÉFINIR LE NOM DU FICHIER EN PREMIER
+DB_FILE = "data_ovins_v2.csv" 
+
+# 2. MAINTENANT VOUS POUVEZ L'AFFICHER
 st.sidebar.write(f"📁 Fichier actuel : {DB_FILE}")
 st.sidebar.write(f"📊 Nombre de lignes : {len(data)}")
 
