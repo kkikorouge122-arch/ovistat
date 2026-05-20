@@ -224,3 +224,4 @@ with tab3:
             
     else:
         st.info("📊 Les analyses apparaîtront après le premier enregistrement.")
+
