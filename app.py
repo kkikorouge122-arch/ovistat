@@ -131,6 +131,23 @@ with tabs[4]:
     st.write("**Auteur :** [MERABIA KAWTHER] | **Version :** 1.2.0")
     with st.expander("📖 Guide Rapide"):
         st.write("1. Scannez l'animal en profil.\n2. Validez les mesures suggérées.\n3. Consultez les indices en Analyse.")
+with tabs[5]:
+    st.subheader("📖 Manuel d'Utilisation Complet")
+        # Vérifier si le fichier existe sur le serveur
+    if os.path.exists("manuel_ovistat.pdf"):
+        with open("manuel_ovistat.pdf", "rb") as f:
+            pdf_data = f.read()
+        
+        st.download_button(
+            label="📥 Cliquer ici pour ouvrir le Manuel Complet (PDF)",
+            data=pdf_data,
+            file_name="Manuel_Utilisation_OviStat.pdf",
+            mime="application/pdf",
+            help="Téléchargez le guide illustré pour apprendre à utiliser l'IA et les mesures."
+        )
+        st.success("Le manuel est disponible ! Téléchargez-le pour une lecture hors-ligne à la ferme.")
+    else:
+        st.warning("⚠️ Le fichier 'manuel_ovistat.pdf' est introuvable sur le serveur. Veuillez l'ajouter à votre GitHub.")
 
 # --- MAINTENANCE ---
 with st.expander("⚙️ Maintenance"):
