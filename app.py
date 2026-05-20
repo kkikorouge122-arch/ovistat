@@ -7,6 +7,12 @@ from ultralytics import YOLO
 from PIL import Image
 from fpdf import FPDF
 
+DB_SANTE = "data_sante_ovins.csv"
+COL_SANTE = ["Date", "ID", "Type", "Produit", "Veterinaire", "Prochain_RDV"]
+
+if not os.path.exists(DB_SANTE):
+    pd.DataFrame(columns=COL_SANTE).to_csv(DB_SANTE, index=False, sep=';', encoding='utf-8-sig')
+
 # --- 1. CONFIGURATION & DESIGN ---
 st.set_page_config(page_title="OviStat Vision Pro", layout="wide")
 
@@ -51,7 +57,7 @@ data = load_data()
 # --- 3. INTERFACE ---
 st.title("🐑 OviStat IA : Morphométrie Avancée")
 
-tab1, tab2, tab3 = st.tabs(["📥 Saisie Terrain", "🔍 Historique", "📊 Analyse"])
+tab1, tab2, tab3, tab4 = st.tabs(["📥 Saisie IA", "🔍 Historique", "📊 Analyse", "🩺 Santé"])
 
 with tab1:
     with st.form("form_expert", clear_on_submit=True):
@@ -235,3 +241,66 @@ with tab3:
             
     else:
         st.info("📊 Les analyses apparaîtront après le premier enregistrement.")
+# --- ONGLET 4 : SANTÉ & VACCINATION ---
+with tab4:
+    st.header("🩺 Carnet de Santé Numérique")
+    
+    # --- PARTIE A : CONTACTS VÉTÉRINAIRES ---
+    with st.expander("📞 Contacts d'Urgence"):
+        c_v1, c_v2 = st.columns(2)
+        c_v1.info("**Dr. Ahmed (Vétérinaire)**  \n📞 +213 6XX XX XX XX")
+        c_v2.info("**Pharmacie Rurale**  \n📞 +213 2XX XX XX XX")
+
+    st.divider()
+
+    # --- PARTIE B : SAISIE D'UN SOIN ---
+    st.subheader("💉 Enregistrer un soin ou vaccin")
+    with st.form("form_sante"):
+        col_s1, col_s2 = st.columns(2)
+        id_sante = col_s1.selectbox("Animal concerné", data["ID"].unique()) if not data.empty else st.text_input("ID Animal")
+        type_soin = col_s1.selectbox("Type d'acte", ["Vaccination", "Déparasitage", "Traitement", "Autre"])
+        produit = col_s2.text_input("Nom du produit (ex: Enterotoxémie)")
+        prochain = col_s2.date_input("Rappel prévu le")
+        
+        if st.form_submit_button("Enregistrer le soin"):
+            nouveau_soin = [date.today(), id_sante, type_soin, produit, "Dr. Ahmed", prochain]
+            pd.DataFrame([nouveau_soin], columns=COL_SANTE).to_csv(DB_SANTE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
+            st.success(f"Soin enregistré pour {id_sante}")
+
+    # --- PARTIE C : HISTORIQUE MÉDICAL ---
+    st.subheader("📋 Historique Médical")
+    if os.path.exists(DB_SANTE):
+        df_sante = pd.read_csv(DB_SANTE, sep=';')
+        if not df_sante.empty:
+            # On peut filtrer par animal
+            if not data.empty:
+                filtre_id = st.selectbox("Filtrer par animal", ["Tous"] + list(data["ID"].unique()))
+                if filtre_id != "Tous":
+                    df_sante = df_sante[df_sante["ID"] == filtre_id]
+            st.table(df_sante)
+# --- SECTION MAINTENANCE (À METTRE TOUT EN BAS DU FICHIER) ---
+st.divider()
+
+with st.expander("⚙️ Paramètres Avancés & Maintenance"):
+    st.warning("⚠️ **Zone de danger** : Les actions suivantes sont irréversibles.")
+    
+    # 1. Option pour vider la base des mensurations
+    if st.checkbox("Confirmer la suppression des mensurations (CSV)"):
+        if st.button("🗑️ Vider le fichier des mesures", type="primary"):
+            if os.path.exists(DB_FILE):
+                os.remove(DB_FILE)
+                st.success("Fichier des mesures supprimé. Il sera recréé au prochain enregistrement.")
+                st.rerun()
+
+    st.divider()
+
+    # 2. Option pour vider la base de santé
+    if st.checkbox("Confirmer la suppression du carnet de santé"):
+        if st.button("🗑️ Vider le carnet de santé", type="primary"):
+            if os.path.exists(DB_SANTE):
+                os.remove(DB_SANTE)
+                st.success("Carnet de santé réinitialisé.")
+                st.rerun()
+
+    st.divider()
+    st.info(f"📍 Emplacement du serveur : {os.getcwd()}")
