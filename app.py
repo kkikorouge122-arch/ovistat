@@ -20,14 +20,20 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-DB_FILE = "data_ovinstat_V4.csv" # On passe en V4 pour repartir de zéro
+# --- CONFIGURATION ---
+DB_FILE = "data_ovinstat_V5.csv"  # Nouvelle version propre
 
-# Les 24 paramètres + métadonnées
+# Liste exacte des colonnes (assurez-vous que ID est bien là)
 COLONNES = [
     "Date", "ID", "Race", "Age", "Poids", 
     "HG", "HS", "LB", "LQ", "LT", "LC", "LH", "LI", "LP", "PP", "TP",
     "Lc_cornes", "LT_tete", "Lt_tete", "LO", "Lo_oreille", "TC", "LY", "TS", "PS", "LG", "LL"
 ]
+
+# Initialisation
+if not os.path.exists(DB_FILE):
+    pd.DataFrame(columns=COLONNES).to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
+
 
 # --- 2. FONCTIONS TECHNIQUES ---
 @st.cache_resource
