@@ -152,19 +152,21 @@ with tab2:
     )
 
 
+# --- ONGLET 3 : ANALYSE, BENCHMARK & CERTIFICAT ---
 with tab3:
     st.header("🧠 Expertise & Benchmark Zootechnique")
     
     if not data.empty:
-        # 1. SÉLECTION DE L'ANIMAL
+        # 1. SÉLECTION DE L'ANIMAL (C'est ici que 'target' est créé)
         target = st.selectbox("Sélectionner l'animal pour l'audit complet", data["ID"].unique())
         anim = data[data["ID"] == target].iloc[-1] 
         
-        # --- PARTIE A : SCORES INDIVIDUELS (VOTRE CODE) ---
+        # --- PARTIE A : SCORES INDIVIDUELS ---
         st.subheader("🥇 Scores Individuels")
         try:
-            # Note : Assurez-vous que les noms de colonnes 'Poids_kg', 'LB', 'TP', 'HG' correspondent à votre CSV
-            poids_val = anim['Poids_kg'] if 'Poids_kg' in anim else 0
+            # Vérification des noms de colonnes
+            poids_val = anim['Poids'] if 'Poids' in anim else 0
+            # Formules Zootechniques
             indice_compacite = poids_val / anim['LB'] if anim['LB'] > 0 else 0
             indice_anamorphose = (anim['TP']**2) / anim['HG'] if anim['HG'] > 0 else 0
             indice_proportion = anim['HG'] / anim['LB'] if anim['LB'] > 0 else 0
@@ -172,114 +174,53 @@ with tab3:
             c1, c2, c3 = st.columns(3)
             with c1:
                 st.metric("Rendement Viande", f"{indice_compacite:.2f}")
-                st.caption("Indice de Compacité")
             with c2:
                 st.metric("Robustesse", f"{indice_anamorphose:.2f}")
-                st.caption("Indice d'Anamorphose")
             with c3:
                 format_animal = "Longiligne" if indice_proportion < 0.95 else "Médioligne"
                 st.metric("Format", format_animal)
-                st.caption(f"Ratio HG/LB: {indice_proportion:.2f}")
 
-            # Conseil IA basé sur l'individu
             if indice_compacite < 0.5:
-                st.warning("💡 **Conseil Individuel :** Animal un peu frêle. Surveiller l'alimentation.")
+                st.warning("💡 **Conseil :** Animal un peu frêle.")
             else:
-                st.success("💡 **Conseil Individuel :** Excellente conformation bouchère.")
+                st.success("💡 **Conseil :** Excellente conformation.")
 
         except Exception as e:
             st.error(f"Données insuffisantes pour les indices : {e}")
 
         st.divider()
 
-        # --- PARTIE B : BENCHMARK (COMPARAISON AU GROUPE) ---
+        # --- PARTIE B : BENCHMARK ---
         if len(data) >= 2:
             st.subheader(f"📊 Position de {target} par rapport au troupeau")
-            
-            moyenne_poids = data['Poids_kg'].mean()
+            moyenne_poids = data['Poids'].mean()
             diff_poids = ((poids_val - moyenne_poids) / moyenne_poids) * 100 if moyenne_poids > 0 else 0
             
             col_b1, col_b2 = st.columns(2)
             with col_b1:
                 st.metric("Performance Poids", f"{poids_val} kg", f"{diff_poids:.1f}% vs Moyenne")
             with col_b2:
-                # Classement
-                rang = data['Poids_kg'].rank(ascending=False).iloc[-1]
+                rang = data['Poids'].rank(ascending=False).iloc[-1]
                 st.metric("Rang", f"{int(rang)} / {len(data)}")
 
-            # Graphique de Distribution
-            fig, ax = plt.subplots(figsize=(10, 3))
-            ax.hist(data['Poids_kg'], bins=10, color='#d1dceb', edgecolor='#1f77b4', alpha=0.7)
-            ax.axvline(poids_val, color='red', linestyle='--', label=f"{target}")
-            ax.axvline(moyenne_poids, color='green', linestyle='-', label="Moyenne")
-            ax.set_xlabel("Poids (kg)")
-            ax.legend()
-            st.pyplot(fig)
-        else:
-            st.info("💡 Les statistiques de groupe apparaîtront quand vous aurez au moins 2 animaux.")
+        st.divider()
+
+        # --- PARTIE C : GÉNÉRATION DU CERTIFICAT (À l'intérieur du IF) ---
+        st.subheader("📄 Certificat Officiel")
+        if st.button(f"Générer le certificat pour {target}"):
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial", 'B', 16)
+            pdf.cell(200, 10, "CERTIFICAT DE QUALITÉ OVISTAT IA", ln=True, align='C')
+            pdf.ln(10)
+            pdf.set_font("Arial", '', 12)
+            pdf.cell(0, 10, f"ID Animal : {target}", ln=True)
+            pdf.cell(0, 10, f"Race : {anim['Race']}", ln=True)
+            pdf.cell(0, 10, f"Indice Compacité : {indice_compacite:.2f}", ln=True)
+            pdf.cell(0, 10, f"Rang Troupeau : {int(rang)} / {len(data)}", ln=True)
+            
+            pdf_bytes = pdf.output(dest="S").encode("latin-1")
+            st.download_button(f"📥 Télécharger PDF {target}", data=pdf_bytes, file_name=f"Certificat_{target}.pdf")
             
     else:
         st.info("📊 Les analyses apparaîtront après le premier enregistrement.")
-
-        st.divider()
-        st.subheader("📄 Certificat de Vente Officiel")
-        
-    if st.button(f"Générer le certificat pour {target}"):
-            # Création du PDF
-            pdf = FPDF()
-            pdf.add_page()
-            
-            # --- ENTÊTE ---
-            pdf.set_font("Arial", 'B', 20)
-            pdf.set_text_color(31, 119, 180) # Bleu OviStat
-            pdf.cell(200, 15, "CERTIFICAT DE QUALITÉ OVISTAT IA", ln=True, align='C')
-            
-            pdf.set_font("Arial", 'I', 10)
-            pdf.set_text_color(100)
-            pdf.cell(200, 10, f"Généré le {datetime.now().strftime('%d/%m/%Y à %H:%M')}", ln=True, align='C')
-            pdf.ln(10)
-
-            # --- INFOS IDENTITÉ ---
-            pdf.set_fill_color(240, 242, 246)
-            pdf.set_font("Arial", 'B', 12)
-            pdf.set_text_color(0)
-            pdf.cell(0, 10, f" IDENTIFICATION DE L'ANIMAL : {target}", ln=True, fill=True)
-            
-            pdf.set_font("Arial", '', 11)
-            pdf.cell(100, 10, f"Race : {anim['Race']}")
-            pdf.cell(100, 10, f"Age : {anim['Age']} mois", ln=True)
-            pdf.cell(100, 10, f"Poids actuel : {poids_val} kg")
-            pdf.cell(100, 10, f"Rang Troupeau : {int(rang)} / {len(data)}", ln=True)
-            pdf.ln(5)
-
-            # --- SCORES ZOOTECHNIQUES ---
-            pdf.set_font("Arial", 'B', 12)
-            pdf.cell(0, 10, " EXPERTISE MORPHOMÉTRIQUE", ln=True, fill=True)
-            
-            pdf.set_font("Arial", '', 11)
-            pdf.cell(100, 10, f"Indice de Compacité (Viande) : {indice_compacite:.2f}")
-            pdf.cell(100, 10, f"Indice de Robustesse : {indice_anamorphose:.2f}", ln=True)
-            pdf.cell(100, 10, f"Format : {format_animal} (Ratio: {indice_proportion:.2f})", ln=True)
-            pdf.ln(5)
-
-            # --- MENSURATIONS CLÉS ---
-            pdf.set_font("Arial", 'B', 12)
-            pdf.cell(0, 10, " MENSURATIONS PRINCIPALES (CM)", ln=True, fill=True)
-            
-            pdf.set_font("Arial", '', 10)
-            # On liste quelques mesures clés parmi les 24
-            mesures_pdf = f"HG: {anim['HG']} | HS: {anim['HS']} | LB: {anim['LB']} | TP: {anim['TP']} | TS: {anim['TS']}"
-            pdf.multi_cell(0, 10, mesures_pdf)
-            
-            pdf.ln(15)
-            pdf.set_font("Arial", 'I', 9)
-            pdf.multi_cell(0, 5, "Ce document est généré par l'IA OviStat Vision Pro sur la base des mesures biométriques relevées. Il certifie la conformité de l'animal aux standards de performance du troupeau.")
-
-            # Sauvegarde et bouton de téléchargement
-            pdf_output = pdf.output(dest="S").encode("latin-1")
-            st.download_button(
-                label=f"📥 Télécharger le Certificat de {target} (PDF)",
-                data=pdf_output,
-                file_name=f"Certificat_{target}.pdf",
-                mime="application/pdf"
-            )
