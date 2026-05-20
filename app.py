@@ -152,20 +152,47 @@ with tab2:
 
 
 with tab3:
-    st.subheader("📈 Analyse de performance")
-    # On vérifie : 1. Si le fichier n'est pas vide | 2. Si la colonne ID existe
-    if not data.empty and "ID" in data.columns:
-        param = st.selectbox("Choisir un paramètre à analyser", [c for c in COLONNES if c not in ["Date", "ID", "Race"]])
+    st.subheader("🧠 Scores et Indices Zootechniques")
+    
+    if not data.empty:
+        target = st.selectbox("Sélectionner l'animal pour l'audit", data["ID"].unique())
+        anim = data[data["ID"] == target].iloc[-1] # On prend la dernière mesure
         
-        # On vérifie si le paramètre choisi est bien dans le fichier
-        if param in data.columns:
-            fig, ax = plt.subplots()
-            ax.bar(data["ID"].astype(str), data[param], color='#1f77b4')
-            plt.xticks(rotation=45)
-            ax.set_ylabel(param)
-            st.pyplot(fig)
-        else:
-            st.warning(f"Le paramètre {param} n'est pas encore enregistré dans le fichier.")
+        # --- CALCULS DES INDICES ---
+        # On utilise des 'try/except' pour éviter les erreurs si une valeur est à 0
+        try:
+            indice_compacite = anim['Poids_kg'] / anim['LB'] if anim['LB'] > 0 else 0
+            indice_anamorphose = (anim['TP']**2) / anim['HG'] if anim['HG'] > 0 else 0
+            indice_proportion = anim['HG'] / anim['LB'] if anim['LB'] > 0 else 0
+            
+            # --- AFFICHAGE DES SCORES ---
+            c1, c2, c3 = st.columns(3)
+            
+            with c1:
+                st.metric("Rendement Viande", f"{indice_compacite:.2f}")
+                st.caption("Indice de Compacité")
+                
+            with c2:
+                st.metric("Robustesse", f"{indice_anamorphose:.2f}")
+                st.caption("Indice d'Anamorphose")
+                
+            with c3:
+                # Interprétation du format
+                format_animal = "Longiligne" if indice_proportion < 0.95 else "Médioligne"
+                st.metric("Format", format_animal)
+                st.caption(f"Ratio HG/LB: {indice_proportion:.2f}")
+
+            st.divider()
+            
+            # --- CONSEIL DE L'IA ---
+            if indice_compacite < 0.5:
+                st.warning("💡 **Conseil IA :** Animal un peu frêle. Augmenter la part énergétique de la ration.")
+            else:
+                st.success("💡 **Conseil IA :** Excellente conformation bouchère. Potentiel reproducteur élevé.")
+
+        except Exception as e:
+            st.error(f"Mesures incomplètes pour le calcul des indices : {e}")
     else:
-        st.info("📊 Les graphiques apparaîtront ici après votre premier enregistrement réussi.")
+        st.info("📊 Les analyses apparaîtront après le premier enregistrement.")
+
 
