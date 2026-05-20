@@ -134,7 +134,11 @@ with tabs[4]:
 
 # --- MAINTENANCE ---
 with st.expander("⚙️ Maintenance"):
-    if st.button("🗑️ Vider la base"):
-        if os.path.exists(DB_FILE): os.remove(DB_FILE)
-        st.rerun()
-        : {os.getcwd()}")
+    st.warning("Attention : Action irréversible")
+    if st.button("🗑️ Vider la base de données"):
+        if os.path.exists(DB_FILE):
+            os.remove(DB_FILE)
+            st.success("Fichier supprimé !")
+            st.rerun()
+    st.info(f"📍 Serveur : {os.getcwd()}")
+
