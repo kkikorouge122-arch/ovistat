@@ -129,11 +129,27 @@ with tab1:
 
 with tab2:
     st.subheader("📋 Historique du troupeau")
+    
+    # On affiche les données si elles existent
     if not data.empty:
         st.dataframe(data, use_container_width=True)
-        st.download_button("📥 Télécharger Excel (CSV)", data.to_csv(sep=';', index=False).encode('utf-8-sig'), "base_ovistat.csv")
     else:
-        st.info("Aucune donnée enregistrée.")
+        st.info("ℹ️ La base de données est actuellement vide. Enregistrez un animal pour voir les données.")
+
+    st.divider()
+    st.subheader("📥 Exportation")
+    
+    # Préparation du téléchargement (même si vide, cela téléchargera les en-têtes)
+    csv_ready = data.to_csv(sep=';', index=False).encode('utf-8-sig')
+    
+    st.download_button(
+        label="📥 Télécharger la base Excel (CSV)",
+        data=csv_ready,
+        file_name=f"OviStat_Export_{date.today()}.csv",
+        mime="text/csv",
+        help="Cliquez ici pour récupérer vos données et les ouvrir dans Excel"
+    )
+
 
 with tab3:
     st.subheader("📈 Analyse de performance")
