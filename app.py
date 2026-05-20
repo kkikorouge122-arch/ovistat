@@ -19,7 +19,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-DB_FILE = "data_ovinstat_final.csv"
+DB_FILE = "data_ovinstat_V4.csv" # On passe en V4 pour repartir de zéro
 
 # Les 24 paramètres + métadonnées
 COLONNES = [
