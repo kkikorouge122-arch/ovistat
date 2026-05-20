@@ -137,10 +137,19 @@ with tab2:
 
 with tab3:
     st.subheader("📈 Analyse de performance")
-    if len(data) >= 1:
-        param = st.selectbox("Choisir un paramètre à analyser", COLONNES[4:])
-        fig, ax = plt.subplots()
-        ax.bar(data["ID"], data[param], color='#1f77b4')
-        plt.xticks(rotation=45)
-        ax.set_ylabel(param)
-        st.pyplot(fig)
+    # On vérifie : 1. Si le fichier n'est pas vide | 2. Si la colonne ID existe
+    if not data.empty and "ID" in data.columns:
+        param = st.selectbox("Choisir un paramètre à analyser", [c for c in COLONNES if c not in ["Date", "ID", "Race"]])
+        
+        # On vérifie si le paramètre choisi est bien dans le fichier
+        if param in data.columns:
+            fig, ax = plt.subplots()
+            ax.bar(data["ID"].astype(str), data[param], color='#1f77b4')
+            plt.xticks(rotation=45)
+            ax.set_ylabel(param)
+            st.pyplot(fig)
+        else:
+            st.warning(f"Le paramètre {param} n'est pas encore enregistré dans le fichier.")
+    else:
+        st.info("📊 Les graphiques apparaîtront ici après votre premier enregistrement réussi.")
+
