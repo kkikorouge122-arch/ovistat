@@ -167,6 +167,7 @@ with tabs[3]:
             pd.DataFrame([row_s], columns=COL_SANTE).to_csv(DB_SANTE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
             st.success("Soin enregistré !")
 
+
 # --- ONGLET 5 : À PROPOS ---
 with tabs[4]:
     st.header("ℹ️ À Propos")
