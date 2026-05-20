@@ -8,7 +8,9 @@ from PIL import Image
 
 # --- CONFIGURATION ---
 st.set_page_config(page_title="OviStat Vision Pro", layout="wide")
-DB_FILE = "data_ovins_final.csv"
+# Changez juste le nom du fichier (ajoutez un 'v2' par exemple)
+DB_FILE = "data_ovins_v2.csv" 
+
 
 # MISE À JOUR DES COLONNES (20 colonnes au total avec Date, ID, Race)
 COLONNES = [
