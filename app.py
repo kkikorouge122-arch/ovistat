@@ -7,8 +7,8 @@ from ultralytics import YOLO
 from PIL import Image
 from fpdf import FPDF
 
-# --- 1. CONFIGURATION & DESIGN ---
-st.set_page_config(page_title="OviStat Vision Pro v1.5", page_icon="🐑", layout="wide")
+# --- 1. CONFIGURATION ---
+st.set_page_config(page_title="OviStat Vision Pro v1.6", page_icon="🐑", layout="wide")
 
 st.markdown("""
     <style>
@@ -19,9 +19,10 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-DB_FILE = "data_ovinstat_V10.csv"
+DB_FILE = "data_ovinstat_V11.csv"
 DB_SANTE = "data_sante_ovins.csv"
 
+# LISTE COMPLÈTE DES 28 COLONNES
 COLONNES = [
     "Date", "ID", "Race", "Age", "Poids", 
     "HG", "HS", "LB", "LQ", "LT_tronc", "LC_cou", "LH", "LI", "LP", "PP", "TP",
@@ -49,114 +50,137 @@ model = load_yolo_model()
 data = load_data(DB_FILE, COLONNES)
 
 # --- 3. INTERFACE ---
-st.title("🐑 OviStat IA : Scan Séquentiel")
+st.title("🐑 OviStat IA : Expert Morphométrie")
 
-tabs = st.tabs(["📥 Saisie Terrain", "🔍 Historique", "📊 Analyse", "🩺 Santé", "ℹ️ À Propos"])
+tabs = st.tabs(["📥 Saisie", "🔍 Historique", "📊 Analyse", "🩺 Santé", "ℹ️ À Propos"])
 
-# --- ONGLET 1 : SAISIE (Système Unique Caméra) ---
+# --- ONGLET 1 : SAISIE SÉQUENTIELLE ---
 with tabs[0]:
-    # Gestion du cycle des photos via st.session_state
     if 'step' not in st.session_state: st.session_state.step = 1
-    if 'temp_data' not in st.session_state: st.session_state.temp_data = {}
-
+    
     with st.form("form_global", clear_on_submit=False):
+        st.subheader("🆔 Identité")
         c1, c2, c3 = st.columns(3)
         id_in = c1.text_input("ID Animal", value=f"OVIN-{len(data)+1}")
         age_in = c2.number_input("Âge (mois)", value=12)
         race_in = c3.selectbox("Race", ["Ouled Djellal", "Rembi", "Hamra", "Taadmit"])
 
         st.divider()
-        
-        # BARRE DE PROGRESSION DU SCAN
-        steps = ["📸 Profil", "📏 Dessus", "🐏 Tête", "✅ Terminé"]
-        st.progress(st.session_state.step / 3)
-        st.write(f"**Étape actuelle : {steps[st.session_state.step-1]}**")
-        
-        photo = st.camera_input("Scanner l'angle demandé")
+        st.write(f"📸 **Étape {st.session_state.step}/3 :** " + ["Profil", "Dessus", "Tête"][st.session_state.step-1])
+        photo = st.camera_input("Capturer l'angle actuel")
         
         ia_hg, ia_tp = 0.0, 0.0
-        
         if photo:
-            if st.session_state.step == 1:
-                st.session_state.temp_data['profil'] = photo
-                st.success("Photo Profil enregistrée ! Passez à la suivante.")
-            elif st.session_state.step == 2:
-                st.session_state.temp_data['dos'] = photo
-                st.success("Photo Dos enregistrée !")
-            elif st.session_state.step == 3:
-                st.session_state.temp_data['tete'] = photo
-                st.success("Toutes les photos sont prêtes !")
-            
-            # Bouton pour passer à la photo suivante
             if st.session_state.step < 3:
-                if st.form_submit_button("➡️ Passer à la photo suivante"):
+                if st.form_submit_button(f"➡️ Valider et passer à l'étape {st.session_state.step + 1}"):
                     st.session_state.step += 1
                     st.rerun()
-
-        # LOGIQUE IA (Une fois les photos prises)
-        if 'profil' in st.session_state.temp_data and 'dos' in st.session_state.temp_data:
-            ia_hg, ia_tp = 68.0, 82.0 # Simulation IA
-            st.info(f"🎯 Suggestions IA : HG {ia_hg}cm | TP {ia_tp}cm")
+            else:
+                st.success("✅ Toutes les photos sont prêtes !")
+                ia_hg, ia_tp = 68.5, 84.0 # Simulation IA
 
         st.divider()
-        st.subheader("📏 Mensurations finales")
-        with st.expander("Saisie des 24 paramètres"):
-            g1, g2, g3 = st.columns(3)
-            poids = g1.number_input("Poids (kg)", value=45.0)
-            hg = g2.number_input("HG (Garrot)", value=ia_hg)
-            tp = g3.number_input("TP (Tour Poitrine)", value=ia_tp)
-            # Ajoutez ici les autres g4, g5... pour LB, LT, etc.
+        st.subheader("📏 Mensurations (24 Paramètres)")
         
-        if st.form_submit_button("💾 ENREGISTRER LA FICHE DÉFINITIVE"):
-            if id_in:
-                # Création de la ligne (28 colonnes)
-                row = [date.today(), id_in, race_in, age_in, poids, hg, 0, 0, 0, 0, 0, 0, 0, 0, 0, tp, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, round(poids*0.035,2)]
-                pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
-                # Reset pour l'animal suivant
-                st.session_state.step = 1
-                st.session_state.temp_data = {}
-                st.success("Animal enregistré !"); st.rerun()
+        with st.expander("🏗️ Dimensions du Corps", expanded=True):
+            g1, g2, g3, g4 = st.columns(4)
+            poids = g1.number_input("Poids (kg)", value=45.0)
+            hg = g2.number_input("Hauteur Garrot (HG)", value=ia_hg)
+            hs = g3.number_input("Hauteur Sacrum (HS)", value=0.0)
+            lb = g4.number_input("Long. Corps (LB)", value=0.0)
+            
+            g5, g6, g7, g8 = st.columns(4)
+            lq = g5.number_input("Long. Queue (LQ)", value=0.0)
+            lt_t = g6.number_input("Long. Tronc (LT)", value=0.0)
+            lc_c = g7.number_input("Long. Cou (LC)", value=0.0)
+            lh = g8.number_input("Long. Bassin (LH)", value=0.0)
 
+        with st.expander("📐 Largeurs & Poitrine"):
+            g9, g10, g11, g12 = st.columns(4)
+            li = g9.number_input("Larg. Ischions (LI)", value=0.0)
+            lp = g10.number_input("Larg. Poitrine (LP)", value=0.0)
+            pp = g11.number_input("Prof. Poitrine (PP)", value=0.0)
+            tp = g12.number_input("Tour Poitrine (TP)", value=ia_tp)
+
+        with st.expander("👤 Tête & Oreilles"):
+            g13, g14, g15, g16, g17, g18 = st.columns(6)
+            lc_c = g13.number_input("Long. Cornes (Lc)", value=0.0)
+            lt_te = g14.number_input("Long. Tête (LT)", value=0.0)
+            lt_la = g15.number_input("Larg. Tête (Lt)", value=0.0)
+            lo_lo = g16.number_input("Long. Oreilles (LO)", value=0.0)
+            lo_la = g17.number_input("Larg. Oreilles (Lo)", value=0.0)
+            tc = g18.number_input("Tour Canon (TC)", value=0.0)
+
+        with st.expander("🧬 Reproduction & Laine"):
+            g19, g20, g21, g22, g23 = st.columns(5)
+            ly = g19.number_input("Long. Trayons (LY)", value=0.0)
+            ts = g20.number_input("Tour Scrotal (TS)", value=0.0)
+            ps = g21.number_input("Prof. Scrotale (PS)", value=0.0)
+            lg = g22.number_input("Long. Gigot (LG)", value=0.0)
+            ll = g23.number_input("Long. Laine (LL)", value=0.0)
+
+        ration = round(poids * 0.035, 2)
+        
+        if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
+            row = [date.today(), id_in, race_in, age_in, poids, hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp, lc_c, lt_te, lt_la, lo_lo, lo_la, tc, ly, ts, ps, lg, ll, ration]
+            pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
+            st.session_state.step = 1
+            st.success("✅ Enregistré !"); st.rerun()
 
 # --- ONGLET 2 : HISTORIQUE ---
 with tabs[1]:
+    st.subheader("📋 Base de données")
     if not data.empty:
         st.dataframe(data, use_container_width=True)
-        st.download_button("📥 Excel", data.to_csv(sep=';', index=False).encode('utf-8-sig'), "base_ovistat.csv")
+        st.download_button("📥 Export Excel", data.to_csv(sep=';', index=False).encode('utf-8-sig'), "OviStat_Data.csv")
 
 # --- ONGLET 3 : ANALYSE ---
 with tabs[2]:
     if not data.empty:
-        target = st.selectbox("Audit", data["ID"].unique())
+        target = st.selectbox("Animal pour audit", data["ID"].unique())
         anim = data[data["ID"] == target].iloc[-1]
-        st.metric("Indice Viande", f"{anim['Poids']/anim['LB']:.2f}" if anim['LB']>0 else "0")
-        if st.button("📄 Générer PDF"):
+        
+        # Calcul Indices
+        ic = anim['Poids'] / anim['LB'] if anim['LB'] > 0 else 0
+        ir = (anim['TP']**2) / anim['HG'] if anim['HG'] > 0 else 0
+        
+        c1, c2 = st.columns(2)
+        c1.metric("Indice Viande", f"{ic:.2f}")
+        c2.metric("Indice Robustesse", f"{ir:.2f}")
+        
+        if st.button("📄 Générer Certificat PDF"):
             pdf = FPDF(); pdf.add_page(); pdf.set_font("Arial", 'B', 16)
-            pdf.cell(200, 10, f"CERTIFICAT {target}", ln=True, align='C')
-            st.download_button("📥 Télécharger PDF", pdf.output(dest="S").encode("latin-1"), f"{target}.pdf")
+            pdf.cell(200, 10, f"CERTIFICAT OVI-STAT : {target}", ln=True, align='C')
+            pdf.ln(10); pdf.set_font("Arial", '', 12)
+            pdf.cell(0, 10, f"ID: {target} | Race: {anim['Race']} | Poids: {anim['Poids']}kg", ln=True)
+            pdf.cell(0, 10, f"Indice Viande: {ic:.2f} | Robustesse: {ir:.2f}", ln=True)
+            st.download_button("📥 Télécharger PDF", pdf.output(dest="S").encode("latin-1"), f"Certificat_{target}.pdf")
 
 # --- ONGLET 4 : SANTÉ ---
 with tabs[3]:
-    st.subheader("🩺 Carnet de Santé")
+    st.subheader("🩺 Suivi Sanitaire")
     with st.form("form_sante"):
         id_s = st.selectbox("Animal", data["ID"].unique()) if not data.empty else "N/A"
         acte = st.text_input("Vaccin / Soin")
         if st.form_submit_button("💉 Noter le soin"):
-            pd.DataFrame([[date.today(), id_s, "Soin", acte, "Dr. Ahmed", date.today()]], columns=COL_SANTE).to_csv(DB_SANTE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
+            row_s = [date.today(), id_s, "Soin", acte, "Dr. Ahmed", date.today()]
+            pd.DataFrame([row_s], columns=COL_SANTE).to_csv(DB_SANTE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
             st.success("Soin enregistré !")
 
 # --- ONGLET 5 : À PROPOS ---
 with tabs[4]:
     st.header("ℹ️ À Propos")
-    st.write("**Auteur :** MERABIA KAWTHER | **Version :** 1.5.0")
+    st.write("**Auteur :** MERABIA KAWTHER | **Version :** 1.6.0")
+    if os.path.exists("manuel_ovistat.pdf"):
+        with open("manuel_ovistat.pdf", "rb") as f:
+            st.download_button("📖 Ouvrir le Manuel PDF", f.read(), "Manuel_OviStat.pdf")
     if st.button("🔄 Réinitialiser le cycle de scan"):
         st.session_state.step = 1
-        st.session_state.temp_data = {}
         st.rerun()
 
 # --- MAINTENANCE ---
-st.sidebar.divider()
-with st.sidebar.expander("⚙️ Maintenance"):
+st.divider()
+with st.expander("⚙️ Maintenance"):
     if st.button("🗑️ Vider la base"):
         if os.path.exists(DB_FILE): os.remove(DB_FILE)
         st.rerun()
