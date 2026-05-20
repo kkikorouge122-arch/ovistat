@@ -219,3 +219,66 @@ with tab3:
             
     else:
         st.info("📊 Les analyses apparaîtront après le premier enregistrement.")
+
+        st.divider()
+        st.subheader("📄 Certificat de Vente Officiel")
+        
+        if st.button(f"Générer le certificat pour {target}"):
+            # Création du PDF
+            pdf = FPDF()
+            pdf.add_page()
+            
+            # --- ENTÊTE ---
+            pdf.set_font("Arial", 'B', 20)
+            pdf.set_text_color(31, 119, 180) # Bleu OviStat
+            pdf.cell(200, 15, "CERTIFICAT DE QUALITÉ OVISTAT IA", ln=True, align='C')
+            
+            pdf.set_font("Arial", 'I', 10)
+            pdf.set_text_color(100)
+            pdf.cell(200, 10, f"Généré le {datetime.now().strftime('%d/%m/%Y à %H:%M')}", ln=True, align='C')
+            pdf.ln(10)
+
+            # --- INFOS IDENTITÉ ---
+            pdf.set_fill_color(240, 242, 246)
+            pdf.set_font("Arial", 'B', 12)
+            pdf.set_text_color(0)
+            pdf.cell(0, 10, f" IDENTIFICATION DE L'ANIMAL : {target}", ln=True, fill=True)
+            
+            pdf.set_font("Arial", '', 11)
+            pdf.cell(100, 10, f"Race : {anim['Race']}")
+            pdf.cell(100, 10, f"Age : {anim['Age']} mois", ln=True)
+            pdf.cell(100, 10, f"Poids actuel : {poids_val} kg")
+            pdf.cell(100, 10, f"Rang Troupeau : {int(rang)} / {len(data)}", ln=True)
+            pdf.ln(5)
+
+            # --- SCORES ZOOTECHNIQUES ---
+            pdf.set_font("Arial", 'B', 12)
+            pdf.cell(0, 10, " EXPERTISE MORPHOMÉTRIQUE", ln=True, fill=True)
+            
+            pdf.set_font("Arial", '', 11)
+            pdf.cell(100, 10, f"Indice de Compacité (Viande) : {indice_compacite:.2f}")
+            pdf.cell(100, 10, f"Indice de Robustesse : {indice_anamorphose:.2f}", ln=True)
+            pdf.cell(100, 10, f"Format : {format_animal} (Ratio: {indice_proportion:.2f})", ln=True)
+            pdf.ln(5)
+
+            # --- MENSURATIONS CLÉS ---
+            pdf.set_font("Arial", 'B', 12)
+            pdf.cell(0, 10, " MENSURATIONS PRINCIPALES (CM)", ln=True, fill=True)
+            
+            pdf.set_font("Arial", '', 10)
+            # On liste quelques mesures clés parmi les 24
+            mesures_pdf = f"HG: {anim['HG']} | HS: {anim['HS']} | LB: {anim['LB']} | TP: {anim['TP']} | TS: {anim['TS']}"
+            pdf.multi_cell(0, 10, mesures_pdf)
+            
+            pdf.ln(15)
+            pdf.set_font("Arial", 'I', 9)
+            pdf.multi_cell(0, 5, "Ce document est généré par l'IA OviStat Vision Pro sur la base des mesures biométriques relevées. Il certifie la conformité de l'animal aux standards de performance du troupeau.")
+
+            # Sauvegarde et bouton de téléchargement
+            pdf_output = pdf.output(dest="S").encode("latin-1")
+            st.download_button(
+                label=f"📥 Télécharger le Certificat de {target} (PDF)",
+                data=pdf_output,
+                file_name=f"Certificat_{target}.pdf",
+                mime="application/pdf"
+            )
