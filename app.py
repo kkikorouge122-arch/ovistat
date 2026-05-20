@@ -5,6 +5,7 @@ import os
 from datetime import datetime, date
 from ultralytics import YOLO
 from PIL import Image
+from fpdf import FPDF
 
 # --- 1. CONFIGURATION & DESIGN ---
 st.set_page_config(page_title="OviStat Vision Pro", layout="wide")
@@ -223,7 +224,7 @@ with tab3:
         st.divider()
         st.subheader("📄 Certificat de Vente Officiel")
         
-        if st.button(f"Générer le certificat pour {target}"):
+    if st.button(f"Générer le certificat pour {target}"):
             # Création du PDF
             pdf = FPDF()
             pdf.add_page()
