@@ -30,19 +30,31 @@ COLONNES = [
 ]
 COL_SANTE = ["Date", "ID", "Type", "Produit", "Veterinaire", "Prochain_RDV"]
 
-# --- 2. FONCTIONS ---
+# --- 2. FONCTIONS (VERSION SÉCURISÉE) ---
 @st.cache_resource
-def load_yolo_model(): return YOLO('yolov8n.pt')
+def load_yolo_model(): 
+    return YOLO('yolov8n.pt')
 
 def load_data(file, cols):
-    if os.path.exists(file): return pd.read_csv(file, sep=';', encoding='utf-8-sig', on_bad_lines='skip')
+    if os.path.exists(file):
+        try:
+            df = pd.read_csv(file, sep=';', encoding='utf-8-sig', on_bad_lines='skip')
+            if df.empty:
+                return pd.DataFrame(columns=cols)
+            return df
+        except Exception:
+            # Si le fichier est vide ou illisible, on renvoie un DataFrame vide avec les bonnes colonnes
+            return pd.DataFrame(columns=cols)
     return pd.DataFrame(columns=cols)
 
+# Initialisation physique forcée des fichiers avec en-têtes
 for f, c in zip([DB_FILE, DB_SANTE], [COLONNES, COL_SANTE]):
-    if not os.path.exists(f): pd.DataFrame(columns=c).to_csv(f, index=False, sep=';', encoding='utf-8-sig')
+    if not os.path.exists(f) or os.path.getsize(f) == 0:
+        pd.DataFrame(columns=c).to_csv(f, index=False, sep=';', encoding='utf-8-sig')
 
 model = load_yolo_model()
 data = load_data(DB_FILE, COLONNES)
+
 
 def get_next_id(df):
     if df.empty: return "OVIN-1"
