@@ -76,12 +76,24 @@ tabs = st.tabs(["📥 Saisie", "🔍 Historique & Modif", "📊 Analyse", "🩺 
 with tabs[0]:
     if 'step' not in st.session_state: st.session_state.step = 1
     with st.form("form_global"):
-        st.subheader("📍 Localisation")
-        cw, cc = st.columns(2)
-        wilaya_sel = cw.selectbox("Wilaya", list_wilayas)
+                st.subheader("📍 Localisation")
+        col_w, col_c = st.columns(2)
+        
+        wilaya_sel = col_w.selectbox("Sélectionnez la Wilaya", list_wilayas)
+        
+        # On extrait le nom propre (ex: on transforme "17-Djelfa" en "Djelfa")
         w_clean = wilaya_sel.split("-")[-1].strip()
-        communes_possibles = df_communes[df_communes['wilaya_name'].str.strip().str.lower() == w_clean.lower()]['commune_name'].tolist()
-        commune_sel = cc.selectbox("Commune", sorted(communes_possibles) if communes_possibles else ["Saisir..."])
+        
+        # On cherche les communes (insensible à la casse pour plus de sécurité)
+        communes_possibles = df_communes[df_communes['wilaya_name'].str.lower() == w_clean.lower()]['commune_name'].unique().tolist()
+        
+        if communes_possibles:
+            commune_sel = col_c.selectbox("Sélectionnez la Commune", sorted(communes_possibles))
+        else:
+            # Sécurité : Si le fichier CSV ne répond pas, on laisse l'utilisateur écrire
+            commune_sel = col_c.text_input("Commune (Saisie libre)", value="Djelfa Centre")
+            st.warning(f"⚠️ '{w_clean}' non trouvé dans le fichier CSV. Saisie manuelle activée.")
+
 
         c1, c2, c3 = st.columns(3)
         id_in = c1.text_input("ID Animal")
