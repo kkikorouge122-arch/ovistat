@@ -46,10 +46,16 @@ def get_algeria_geo():
         "51-Ouled Djellal", "52-Bordj Baji Mokhtar", "53-Béni Abbès", "54-Timimoun", "55-Touggourt", "56-Djanet", "57-In Salah", "58-In Guezzam"
     ]
     if os.path.exists("algeria_geo.csv"):
-        df_geo = pd.read_csv("algeria_geo.csv", sep=";")
+        # On essaie d'abord avec le point-virgule
+        df_geo = pd.read_csv("algeria_geo.csv", sep=";", encoding='utf-8')
+        # Si ça échoue (une seule colonne trouvée), on essaie avec la virgule
+        if len(df_geo.columns) < 2:
+            df_geo = pd.read_csv("algeria_geo.csv", sep=",", encoding='utf-8')
     else:
-        df_geo = pd.DataFrame({"wilaya_name": ["Djelfa", "Alger", "Ouled Djellal"], "commune_name": ["Djelfa Centre", "Alger Centre", "Sidi Khaled"]})
+        df_geo = pd.DataFrame(columns=["wilaya_name", "commune_name"])
+    
     return wilayas, df_geo
+
 def load_data(file, cols):
     if os.path.exists(file):
         try:
