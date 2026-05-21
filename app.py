@@ -59,19 +59,28 @@ with tabs[0]:
     if 'step' not in st.session_state: st.session_state.step = 1
     
     with st.form("form_global", clear_on_submit=False):
-        st.subheader("🆔 Identité")
-        c1, c2, c3 = st.columns(3)
-        id_in = c1.text_input("ID Animal", value=f"OVIN-{len(data)+1}")
-        age_in = c2.number_input("Âge (mois)", value=12)
-        race_in = c3.selectbox("Race", ["Ouled Djellal", "Rembi", "Hamra", "Taadmit"])
+        st.subheader("🆔 Identification de l'animal")
+        
+        c1, c2 = st.columns([2, 1])
+        
+        # 1. Gestion de l'ID (Manuel ou Automatique pour étude)
+        id_in = c1.text_input("ID / Code Boucle (Laissez vide pour Auto-ID)", key="input_id")
+        
+        # Petit texte explicatif pour vos collaborateurs
+        st.caption("💡 Si l'animal n'a pas de code, le système générera un ID unique 'TEMP-...' lors de l'enregistrement.")
+
+        c_age, c_race = st.columns(2)
+        age_in = c_age.number_input("Âge (mois)", value=12)
+        race_in = c_race.selectbox("Race", ["Ouled Djellal", "Rembi", "Hamra", "Taadmit"])
 
         st.divider()
+        
+        # 2. Système de Caméra Séquentielle
         st.write(f"📸 **Étape {st.session_state.step}/3 :** " + ["Profil", "Dessus", "Tête"][st.session_state.step-1])
         photo = st.camera_input("Capturer l'angle actuel")
         
         ia_hg, ia_tp = 0.0, 0.0
         
-        # --- CORRECTION DE L'INDENTATION ICI ---
         if photo:
             if st.session_state.step < 3:
                 if st.form_submit_button(f"➡️ Valider et passer à l'étape {st.session_state.step + 1}"):
@@ -123,12 +132,19 @@ with tabs[0]:
 
         ration_val = round(poids * 0.035, 2)
         
+        # 3. Validation finale avec gestion automatique de l'ID si vide
         if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
-            if id_in:
-                row = [date.today(), id_in, race_in, age_in, poids, hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp, lc_cornes, lt_te, lt_la, lo_lo, lo_la, tc, ly, ts, ps, lg, ll, ration_val]
-                pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
-                st.session_state.step = 1
-                st.success("✅ Enregistré !"); st.rerun()
+            # Si l'ID est vide, on génère un ID temporaire basé sur l'horodatage
+            id_final = id_in if id_in else f"TEMP-{datetime.now().strftime('%d%H%M%S')}"
+            
+            row = [date.today(), id_final, race_in, age_in, poids, hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp, lc_cornes, lt_te, lt_la, lo_lo, lo_la, tc, ly, ts, ps, lg, ll, ration_val]
+            pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
+            
+            st.session_state.step = 1 # On remet le scan à zéro
+            st.success(f"✅ Animal enregistré avec l'ID : {id_final}")
+            st.balloons()
+            st.rerun()
+
 
 # --- ONGLET 2 : HISTORIQUE & MODIFICATION ---
 with tabs[1]:
