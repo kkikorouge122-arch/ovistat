@@ -33,8 +33,6 @@ COLONNES = [
 COL_SANTE = ["Date", "ID", "Type", "Produit", "Veterinaire", "Prochain_RDV"]
 
 # --- 2. FONCTIONS ---
-@st.cache_resource
-def load_yolo_model(): return YOLO('yolov8n.pt')
 @st.cache_data
 def get_algeria_geo():
     wilayas = [
@@ -46,15 +44,24 @@ def get_algeria_geo():
         "51-Ouled Djellal", "52-Bordj Baji Mokhtar", "53-Béni Abbès", "54-Timimoun", "55-Touggourt", "56-Djanet", "57-In Salah", "58-In Guezzam"
     ]
     if os.path.exists("algeria_geo.csv"):
-        # On essaie d'abord avec le point-virgule
-        df_geo = pd.read_csv("algeria_geo.csv", sep=";", encoding='utf-8')
-        # Si ça échoue (une seule colonne trouvée), on essaie avec la virgule
-        if len(df_geo.columns) < 2:
-            df_geo = pd.read_csv("algeria_geo.csv", sep=",", encoding='utf-8')
+        # On lit le fichier sans imposer de séparateur fixe au début
+        try:
+            # Test point-virgule
+            df_geo = pd.read_csv("algeria_geo.csv", sep=";", encoding='utf-8')
+            if len(df_geo.columns) < 2: # Si échec, test virgule
+                df_geo = pd.read_csv("algeria_geo.csv", sep=",", encoding='utf-8')
+        except:
+            df_geo = pd.DataFrame(columns=["wilaya_name", "commune_name"])
     else:
         df_geo = pd.DataFrame(columns=["wilaya_name", "commune_name"])
     
+    # Nettoyage préventif des données du fichier
+    if not df_geo.empty:
+        df_geo['wilaya_name'] = df_geo['wilaya_name'].astype(str).str.strip()
+        df_geo['commune_name'] = df_geo['commune_name'].astype(str).str.strip()
+        
     return wilayas, df_geo
+
 
 def load_data(file, cols):
     if os.path.exists(file):
