@@ -114,7 +114,10 @@ with tabs[0]:
 
 # --- ONGLET 2 : HISTORIQUE & MODIF TOTALE ---
 with tabs[1]:
-    data = load_data(DB_FILE, COLONNES)
+    st.subheader("📋 Gestion de la base de données")
+    data = load_data(DB_FILE, COLONNES) 
+    
+    # LIGNE 146 : DOIT AVOIR EXACTEMENT 4 ESPACES DE DÉCALAGE
     if not data.empty:
         st.dataframe(data, use_container_width=True)
         st.divider()
