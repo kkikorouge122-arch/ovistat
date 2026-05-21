@@ -146,20 +146,27 @@ with tabs[0]:
             st.rerun()
 
 
-# --- ONGLET 2 : HISTORIQUE & MODIFICATION ---
+# --- ONGLET 2 : HISTORIQUE, MODIFICATION & STATUT ÉTUDE ---
 with tabs[1]:
-    st.subheader("📋 Gestion de la base de données")
+    st.subheader("📋 Gestion de la base de données de l'étude")
     
     if not data.empty:
-        # --- A. AFFICHAGE ---
-        st.dataframe(data, use_container_width=True)
+        # --- A. AFFICHAGE STYLISÉ (Distinction Officiel/Temporaire) ---
+        display_df = data.copy()
+        # Ajout du statut pour l'étude : ⭐ pour les bouclés, 🕒 pour les temporaires
+        display_df['Statut'] = display_df['ID'].apply(lambda x: "⭐ Officiel" if "TEMP-" not in str(x) else "🕒 Temporaire")
+        
+        # On met le statut en première colonne pour la visibilité
+        cols = ['Statut'] + [c for c in display_df.columns if c != 'Statut']
+        display_df = display_df[cols]
+        
+        st.dataframe(display_df, use_container_width=True)
         
         st.divider()
         
         # --- B. MODIFICATION / SUPPRESSION ---
         st.subheader("🛠️ Modifier ou Supprimer une fiche")
         
-        # Sélection de l'animal à traiter
         id_a_modifier = st.selectbox("Choisir l'ID de l'animal à gérer", data["ID"].unique(), key="select_modif")
         
         col_btn1, col_btn2 = st.columns(2)
@@ -173,35 +180,48 @@ with tabs[1]:
 
         # 2. ZONE DE MODIFICATION
         if col_btn2.checkbox(f"📝 Modifier les données de {id_a_modifier}"):
-            # On récupère les données actuelles
             ligne_actuelle = data[data["ID"] == id_a_modifier].iloc[-1]
             
             with st.form("form_edit"):
-                st.write(f"Modification de : {id_a_modifier}")
-                new_poids = st.number_input("Nouveau Poids (kg)", value=float(ligne_actuelle["Poids"]))
-                new_hg = st.number_input("Nouvelle Hauteur (HG)", value=float(ligne_actuelle["HG"]))
+                st.write(f"Modification de l'animal : **{id_a_modifier}**")
+                c_edit1, c_edit2 = st.columns(2)
+                
+                # Possibilité de modifier l'ID (utile pour remplacer un TEMP- par un code de boucle réel)
+                new_id = c_edit1.text_input("Nouvel ID / Code Boucle", value=str(ligne_actuelle["ID"]))
+                new_poids = c_edit2.number_input("Nouveau Poids (kg)", value=float(ligne_actuelle["Poids"]))
+                new_hg = c_edit1.number_input("Nouvelle Hauteur (HG)", value=float(ligne_actuelle["HG"]))
+                new_age = c_edit2.number_input("Nouvel Âge (mois)", value=int(ligne_actuelle["Age"]))
                 
                 if st.form_submit_button("💾 Enregistrer les modifications"):
-                    # On supprime l'ancienne ligne et on ajoute la nouvelle
+                    # On nettoie la base
                     df_clean = data[data["ID"] != id_a_modifier]
                     
-                    # On crée la nouvelle ligne (copie de l'ancienne avec les changements)
+                    # On met à jour la ligne
                     nouvelle_ligne = ligne_actuelle.copy()
+                    nouvelle_ligne["ID"] = new_id
                     nouvelle_ligne["Poids"] = new_poids
                     nouvelle_ligne["HG"] = new_hg
-                    nouvelle_ligne["Date"] = date.today() # On met à jour la date de modif
+                    nouvelle_ligne["Age"] = new_age
+                    nouvelle_ligne["Date"] = date.today().strftime("%Y-%m-%d")
                     
-                    # Sauvegarde
+                    # Sauvegarde finale
                     df_final = pd.concat([df_clean, pd.DataFrame([nouvelle_ligne])], ignore_index=True)
                     df_final.to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
                     
-                    st.success("Modification enregistrée !")
+                    st.success(f"Mise à jour réussie pour {new_id} !")
                     st.rerun()
 
         st.divider()
-        st.download_button("📥 Télécharger l'archive Excel", data.to_csv(sep=';', index=False).encode('utf-8-sig'), "OviStat_Data.csv")
+        # Bouton de téléchargement Excel (toujours présent)
+        st.download_button(
+            label="📥 Télécharger l'archive Excel complète",
+            data=data.to_csv(sep=';', index=False).encode('utf-8-sig'),
+            file_name=f"OviStat_Data_{date.today()}.csv",
+            mime="text/csv"
+        )
     else:
-        st.info("La base de données est vide.")
+        st.info("La base de données est vide. Les options de gestion apparaîtront après le premier enregistrement.")
+
 
 
 # --- ONGLET 3 : ANALYSE & CERTIFICAT ---
