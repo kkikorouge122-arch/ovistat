@@ -126,7 +126,7 @@ with tabs[0]:
             pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
             st.session_state.step = 1; st.success(f"Enregistré : {id_final}"); st.rerun()
 # --- ONGLET 2 : HISTORIQUE & GESTION (MODIF FORCÉE) ---
-with tabs:
+with tabs[1]:
     st.subheader("📋 Gestion de la base de données")
     
     # Relecture fraîche des données pour éviter le décalage
