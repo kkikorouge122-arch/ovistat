@@ -24,7 +24,7 @@ DB_SANTE = "data_sante_ovins.csv"
 
 # LISTE COMPLÈTE DES 30 COLONNES
 COLONNES = [
-    "Date", "ID", "Race", "Âge", "Poids", 
+    "Date", "ID", "Race", "Age", "Poids", 
     "HG", "HS", "LB", "LQ", "LT_tronc", "LC_cou", "LH", "LI", "LP", "PP", "TP",
     "Lc_cornes", "LT_tete", "Lt_tete", "LO", "Lo_oreille", "TC", "LY", "TS", "PS", "LG", "LL", 
     "Wilaya", "Commune", "Ration"
@@ -46,9 +46,12 @@ def get_algeria_geo():
         "51-Ouled Djellal", "52-Bordj Baji Mokhtar", "53-Béni Abbès", "54-Timimoun", "55-Touggourt", "56-Djanet", "57-In Salah", "58-In Guezzam"
     ]
     if os.path.exists("algeria_geo.csv"):
-        df_geo = pd.read_csv("algeria_geo.csv", sep=";", encoding='utf-8')
+        try:
+            df_geo = pd.read_csv("algeria_geo.csv", sep=";", encoding='utf-8')
+            if len(df_geo.columns) < 2: df_geo = pd.read_csv("algeria_geo.csv", sep=",", encoding='utf-8')
+        except: df_geo = pd.DataFrame(columns=["wilaya_name", "commune_name"])
     else:
-        df_geo = pd.DataFrame(columns=["wilaya_name", "commune_name"])
+        df_geo = pd.DataFrame({"wilaya_name": ["Djelfa", "Alger"], "commune_name": ["Djelfa Centre", "Alger Centre"]})
     return wilayas, df_geo
 
 def load_data(file, cols):
@@ -59,7 +62,7 @@ def load_data(file, cols):
         except: return pd.DataFrame(columns=cols)
     return pd.DataFrame(columns=cols)
 
-# Initialisation
+# Initialisation des fichiers
 for f, c in zip([DB_FILE, DB_SANTE], [COLONNES, COL_SANTE]):
     if not os.path.exists(f) or os.path.getsize(f) == 0:
         pd.DataFrame(columns=c).to_csv(f, index=False, sep=';', encoding='utf-8-sig')
@@ -82,7 +85,7 @@ with tabs[0]:
         w_clean = wilaya_sel.split("-")[-1].strip()
         mask = df_communes['wilaya_name'].str.strip().str.lower() == w_clean.lower()
         communes_possibles = df_communes[mask]['commune_name'].unique().tolist()
-        commune_sel = col_c.selectbox("Commune", sorted(communes_possibles) if communes_possibles else ["Saisie manuelle..."])
+        commune_sel = col_c.selectbox("Commune", sorted(communes_possibles) if communes_possibles else ["Saisir..."])
 
         st.divider()
         st.subheader("🆔 Identification")
@@ -104,31 +107,37 @@ with tabs[0]:
 
         st.divider()
         st.subheader("📏 Mensurations (24 Paramètres)")
-        with st.expander("🏗️ Dimensions du Corps & Tête", expanded=True):
-            g1, g2, g3, g4 = st.columns(4)
-            poids = g1.number_input("Poids (kg)", value=45.0)
-            hg = g2.number_input("HG (Garrot)", value=ia_hg)
-            hs = g3.number_input("HS (Sacrum)", value=0.0)
-            lb = g4.number_input("LB (Long. Corps)", value=0.0)
-            lq = g1.number_input("LQ (Queue)", value=0.0)
-            lt_t = g2.number_input("LT (Tronc)", value=0.0)
-            lc_c = g3.number_input("LC (Cou)", value=0.0)
-            lh = g4.number_input("LH (Bassin)", value=0.0)
-            li = g1.number_input("LI (Ischions)", value=0.0)
-            lp = g2.number_input("LP (Poitrine)", value=0.0)
-            pp = g3.number_input("PP (Prof. Poitrine)", value=0.0)
-            tp = g4.number_input("TP (Tour Poitrine)", value=ia_tp)
-            lc_cornes = g1.number_input("Lc (Cornes)", value=0.0)
-            lt_tete = g2.number_input("LT (Long. Tête)", value=0.0)
-            lt_la = g3.number_input("Lt (Larg. Tête)", value=0.0)
-            lo_lo = g4.number_input("LO (Long. Oreille)", value=0.0)
-            lo_la = g1.number_input("Lo (Larg. Oreille)", value=0.0)
-            tc = g2.number_input("TC (Canon)", value=0.0)
-            ly = g3.number_input("LY (Trayon)", value=0.0)
-            ts = g4.number_input("TS (Scrotal)", value=0.0)
-            ps = g1.number_input("PS (Prof. Scrotale)", value=0.0)
-            lg = g2.number_input("LG (Gigot)", value=0.0)
-            ll = g3.number_input("LL (Laine)", value=0.0)
+        with st.expander("🏗️ Dimensions du Corps (HG, HS, LB, LT, LC, LH, LI, LP, PP, TP)", expanded=True):
+            e1, e2, e3, e4 = st.columns(4)
+            poids = e1.number_input("Poids (kg)", value=45.0)
+            hg = e2.number_input("H. Garrot (HG)", value=ia_hg)
+            hs = e3.number_input("H. Sacrum (HS)", value=0.0)
+            lb = e4.number_input("Long. Corps (LB)", value=0.0)
+            lq = e1.number_input("Long. Queue (LQ)", value=0.0)
+            lt_t = e2.number_input("Long. Tronc (LT)", value=0.0)
+            lc_c = e3.number_input("Long. Cou (LC)", value=0.0)
+            lh = e4.number_input("Long. Bassin (LH)", value=0.0)
+            li = e1.number_input("Larg. Ischions (LI)", value=0.0)
+            lp = e2.number_input("Larg. Poitrine (LP)", value=0.0)
+            pp = e3.number_input("Prof. Poitrine (PP)", value=0.0)
+            tp = e4.number_input("Tour Poitrine (TP)", value=ia_tp)
+
+        with st.expander("👤 Tête & Extrémités (Lc, LT, Lt, LO, Lo, TC)"):
+            t1, t2, t3 = st.columns(3)
+            lc_cornes = t1.number_input("Long. Cornes (Lc)", value=0.0)
+            lt_tete = t2.number_input("Long. Tête (LTête)", value=0.0)
+            lt_la = t3.number_input("Larg. Tête (LtTete)", value=0.0)
+            lo_lo = t1.number_input("Long. Oreille (LO)", value=0.0)
+            lo_la = t2.number_input("Larg. Oreille (Lo)", value=0.0)
+            tc = t3.number_input("Tour Canon (TC)", value=0.0)
+
+        with st.expander("🧬 Reproduction & Laine (LY, TS, PS, LG, LL)"):
+            r1, r2, r3 = st.columns(3)
+            ly = r1.number_input("Long. Trayons (LY)", value=0.0)
+            ts = r2.number_input("Tour Scrotal (TS)", value=0.0)
+            ps = r3.number_input("Prof. Scrotale (PS)", value=0.0)
+            lg = r1.number_input("Long. Gigot (LG)", value=0.0)
+            ll = r2.number_input("Long. Laine (LL)", value=0.0)
 
         if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
             id_final = id_in if id_in else f"TEMP-{datetime.now().strftime('%d%H%M%S')}"
@@ -138,17 +147,15 @@ with tabs[0]:
 
 # --- ONGLET 2 : HISTORIQUE ---
 with tabs[1]:
-    st.subheader("📋 Historique de l'étude")
+    st.subheader("📋 Base de données")
     if not data.empty:
-        df_v = data.copy()
-        df_v.insert(0, 'Statut', df_v['ID'].apply(lambda x: "⭐ Officiel" if "TEMP-" not in str(x) else "🕒 Temporaire"))
-        st.dataframe(df_v, use_container_width=True)
-        st.download_button("📥 Excel", data.to_csv(sep=';', index=False).encode('utf-8-sig'), "base_ovistat.csv")
+        st.dataframe(data, use_container_width=True)
+        st.download_button("📥 Télécharger CSV", data.to_csv(sep=';', index=False).encode('utf-8-sig'), "base_ovistat.csv")
 
 # --- ONGLET 3 : ANALYSE ---
 with tabs[2]:
     if not data.empty:
-        target = st.selectbox("Sélectionner pour audit", data["ID"].unique())
+        target = st.selectbox("Animal pour audit", data["ID"].unique())
         anim = data[data["ID"] == target].iloc[-1]
         c1, c2 = st.columns(2)
         ic = anim['Poids'] / anim['LB'] if anim['LB'] > 0 else 0
@@ -160,18 +167,9 @@ with tabs[2]:
             pdf.cell(200, 10, f"CERTIFICAT : {target}", ln=True, align='C')
             st.download_button("📥 Télécharger", pdf.output(dest="S").encode("latin-1"), f"{target}.pdf")
 
-# --- ONGLET 4 : SANTÉ ---
-with tabs[3]:
-    st.subheader("🩺 Suivi Sanitaire")
-    with st.form("form_sante"):
-        id_s = st.selectbox("Animal", data["ID"].unique()) if not data.empty else "N/A"
-        acte = st.text_input("Soin")
-        if st.form_submit_button("💉 Noter"):
-            pd.DataFrame([[date.today(), id_s, "Soin", acte, "Dr. Ahmed", date.today()]], columns=COL_SANTE).to_csv(DB_SANTE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
-
 # --- MAINTENANCE ---
-with st.sidebar.expander("⚙️ Maintenance"):
+st.divider()
+with st.expander("⚙️ Maintenance"):
     if st.button("🗑️ Vider la base"):
         if os.path.exists(DB_FILE): os.remove(DB_FILE)
         st.rerun()
-
