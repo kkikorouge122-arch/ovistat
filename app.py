@@ -76,9 +76,8 @@ tabs = st.tabs(["📥 Saisie", "🔍 Historique & Modif", "📊 Analyse", "🩺 
 with tabs[0]:
     if 'step' not in st.session_state: st.session_state.step = 1
     with st.form("form_global"):
-                st.subheader("📍 Localisation de l'étude")
+        st.subheader("📍 Localisation de l'étude")
         col_w, col_c = st.columns(2)
-        
         # 1. Sélection de la Wilaya avec une clé unique pour forcer le rafraîchissement
         wilaya_sel = col_w.selectbox("Sélectionnez la Wilaya", list_wilayas, key="wilaya_choice")
         
