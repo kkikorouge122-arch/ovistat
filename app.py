@@ -70,7 +70,9 @@ with tabs[0]:
         photo = st.camera_input("Capturer l'angle actuel")
         
         ia_hg, ia_tp = 0.0, 0.0
-            if photo:
+        
+        # --- CORRECTION DE L'INDENTATION ICI ---
+        if photo:
             if st.session_state.step < 3:
                 if st.form_submit_button(f"➡️ Valider et passer à l'étape {st.session_state.step + 1}"):
                     st.session_state.step += 1
@@ -104,7 +106,7 @@ with tabs[0]:
 
         with st.expander("👤 Tête & Oreilles"):
             g13, g14, g15, g16, g17, g18 = st.columns(6)
-            lc_c = g13.number_input("Long. Cornes (Lc)", value=0.0)
+            lc_cornes = g13.number_input("Long. Cornes (Lc)", value=0.0)
             lt_te = g14.number_input("Long. Tête (LT)", value=0.0)
             lt_la = g15.number_input("Larg. Tête (Lt)", value=0.0)
             lo_lo = g16.number_input("Long. Oreilles (LO)", value=0.0)
@@ -119,13 +121,14 @@ with tabs[0]:
             lg = g22.number_input("Long. Gigot (LG)", value=0.0)
             ll = g23.number_input("Long. Laine (LL)", value=0.0)
 
-        ration = round(poids * 0.035, 2)
+        ration_val = round(poids * 0.035, 2)
         
         if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
-            row = [date.today(), id_in, race_in, age_in, poids, hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp, lc_c, lt_te, lt_la, lo_lo, lo_la, tc, ly, ts, ps, lg, ll, ration]
-            pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
-            st.session_state.step = 1
-            st.success("✅ Enregistré !"); st.rerun()
+            if id_in:
+                row = [date.today(), id_in, race_in, age_in, poids, hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp, lc_cornes, lt_te, lt_la, lo_lo, lo_la, tc, ly, ts, ps, lg, ll, ration_val]
+                pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
+                st.session_state.step = 1
+                st.success("✅ Enregistré !"); st.rerun()
 
 # --- ONGLET 2 : HISTORIQUE & MODIFICATION ---
 with tabs[1]:
