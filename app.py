@@ -127,12 +127,63 @@ with tabs[0]:
             st.session_state.step = 1
             st.success("✅ Enregistré !"); st.rerun()
 
-# --- ONGLET 2 : HISTORIQUE ---
+# --- ONGLET 2 : HISTORIQUE & MODIFICATION ---
 with tabs[1]:
-    st.subheader("📋 Base de données")
+    st.subheader("📋 Gestion de la base de données")
+    
     if not data.empty:
+        # --- A. AFFICHAGE ---
         st.dataframe(data, use_container_width=True)
-        st.download_button("📥 Export Excel", data.to_csv(sep=';', index=False).encode('utf-8-sig'), "OviStat_Data.csv")
+        
+        st.divider()
+        
+        # --- B. MODIFICATION / SUPPRESSION ---
+        st.subheader("🛠️ Modifier ou Supprimer une fiche")
+        
+        # Sélection de l'animal à traiter
+        id_a_modifier = st.selectbox("Choisir l'ID de l'animal à gérer", data["ID"].unique(), key="select_modif")
+        
+        col_btn1, col_btn2 = st.columns(2)
+        
+        # 1. BOUTON SUPPRIMER
+        if col_btn1.button(f"❌ Supprimer définitivement {id_a_modifier}", type="secondary"):
+            df_new = data[data["ID"] != id_a_modifier]
+            df_new.to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
+            st.success(f"Animal {id_a_modifier} supprimé.")
+            st.rerun()
+
+        # 2. ZONE DE MODIFICATION
+        if col_btn2.checkbox(f"📝 Modifier les données de {id_a_modifier}"):
+            # On récupère les données actuelles
+            ligne_actuelle = data[data["ID"] == id_a_modifier].iloc[-1]
+            
+            with st.form("form_edit"):
+                st.write(f"Modification de : {id_a_modifier}")
+                new_poids = st.number_input("Nouveau Poids (kg)", value=float(ligne_actuelle["Poids"]))
+                new_hg = st.number_input("Nouvelle Hauteur (HG)", value=float(ligne_actuelle["HG"]))
+                
+                if st.form_submit_button("💾 Enregistrer les modifications"):
+                    # On supprime l'ancienne ligne et on ajoute la nouvelle
+                    df_clean = data[data["ID"] != id_a_modifier]
+                    
+                    # On crée la nouvelle ligne (copie de l'ancienne avec les changements)
+                    nouvelle_ligne = ligne_actuelle.copy()
+                    nouvelle_ligne["Poids"] = new_poids
+                    nouvelle_ligne["HG"] = new_hg
+                    nouvelle_ligne["Date"] = date.today() # On met à jour la date de modif
+                    
+                    # Sauvegarde
+                    df_final = pd.concat([df_clean, pd.DataFrame([nouvelle_ligne])], ignore_index=True)
+                    df_final.to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
+                    
+                    st.success("Modification enregistrée !")
+                    st.rerun()
+
+        st.divider()
+        st.download_button("📥 Télécharger l'archive Excel", data.to_csv(sep=';', index=False).encode('utf-8-sig'), "OviStat_Data.csv")
+    else:
+        st.info("La base de données est vide.")
+
 
 # --- ONGLET 3 : ANALYSE & CERTIFICAT ---
 with tabs[2]:
