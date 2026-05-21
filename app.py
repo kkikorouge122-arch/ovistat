@@ -7,33 +7,49 @@ from ultralytics import YOLO
 from PIL import Image
 from fpdf import FPDF
 
-# --- 1. CONFIGURATION ---
-st.set_page_config(page_title="OviStat Vision Pro v1.6", page_icon="🐑", layout="wide")
+
+# --- 1. CONFIGURATION & DESIGN ---
+st.set_page_config(page_title="OviStat Vision Pro v1.7", page_icon="🐑", layout="wide")
 
 st.markdown("""
     <style>
     .block-container { padding-top: 1rem; }
-    div[data-testid="stCameraInput"] video { width: 100% !important; object-fit: cover !important; border-radius: 15px; border: 4px solid #1f77b4; }
+    div[data-testid="stCameraInput"] video { width: 100% !important; object-fit: cover !important; border-radius: 15px; border: 3px solid #1f77b4; }
     div[data-testid="stCameraInput"] button { height: 60px !important; background-color: #1f77b4 !important; color: white !important; }
     .stTabs [data-baseweb="tab"] { height: 50px; background-color: #f0f2f6; border-radius: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
-DB_FILE = "data_ovinstat_V11.csv"
+DB_FILE = "data_ovinstat_V12.csv"
 DB_SANTE = "data_sante_ovins.csv"
 
-# LISTE COMPLÈTE DES 28 COLONNES
+# LISTE COMPLÈTE DES 30 COLONNES (Ajout Wilaya et Commune)
 COLONNES = [
     "Date", "ID", "Race", "Age", "Poids", 
     "HG", "HS", "LB", "LQ", "LT_tronc", "LC_cou", "LH", "LI", "LP", "PP", "TP",
-    "Lc_cornes", "LT_tete", "Lt_tete", "LO", "Lo_oreille", "TC", "LY", "TS", "PS", "LG", "LL", "Ration"
+    "Lc_cornes", "LT_tete", "Lt_tete", "LO", "Lo_oreille", "TC", "LY", "TS", "PS", "LG", "LL", 
+    "Wilaya", "Commune", "Ration"
 ]
 COL_SANTE = ["Date", "ID", "Type", "Produit", "Veterinaire", "Prochain_RDV"]
 
 # --- 2. FONCTIONS ---
 @st.cache_resource
 def load_yolo_model(): return YOLO('yolov8n.pt')
-
+@st.cache_data
+def get_algeria_geo():
+    wilayas = [
+        "01-Adrar", "02-Chlef", "03-Laghouat", "04-Oum El Bouaghi", "05-Batna", "06-Béjaïa", "07-Biskra", "08-Béchar", "09-Blida", "10-Bouira",
+        "11-Tamanrasset", "12-Tébessa", "13-Tlemcen", "14-Tiaret", "15-Tizi Ouzou", "16-Alger", "17-Djelfa", "18-Jijel", "19-Sétif", "20-Saïda",
+        "21-Skikda", "22-Sidi Bel Abbès", "23-Annaba", "24-Guelma", "25-Constantine", "26-Médéa", "27-Mostaganem", "28-M'Sila", "29-Mascara", "30-Ouargla",
+        "31-Oran", "32-El Bayadh", "33-Illizi", "34-Bordj Bou Arreridj", "35-Boumerès", "36-El Tarf", "37-Tindouf", "38-Tissemsilt", "39-El Oued", "40-Khenchela",
+        "41-Souk Ahras", "42-Tipaza", "43-Mila", "44-Aïn Defla", "45-Naâma", "46-Aïn Témouchent", "47-Ghardaïa", "48-Relizane", "49-El M'Ghair", "50-El Meniaa",
+        "51-Ouled Djellal", "52-Bordj Baji Mokhtar", "53-Béni Abbès", "54-Timimoun", "55-Touggourt", "56-Djanet", "57-In Salah", "58-In Guezzam"
+    ]
+    if os.path.exists("algeria_geo.csv"):
+        df_geo = pd.read_csv("algeria_geo.csv", sep=";")
+    else:
+        df_geo = pd.DataFrame({"wilaya_name": ["Djelfa", "Alger", "Ouled Djellal"], "commune_name": ["Djelfa Centre", "Alger Centre", "Sidi Khaled"]})
+    return wilayas, df_geo
 def load_data(file, cols):
     if os.path.exists(file):
         try:
@@ -48,7 +64,7 @@ for f, c in zip([DB_FILE, DB_SANTE], [COLONNES, COL_SANTE]):
 
 model = load_yolo_model()
 data = load_data(DB_FILE, COLONNES)
-
+list_wilayas, df_communes = get_algeria_geo()
 # --- 3. INTERFACE ---
 st.title("🐑 OviStat IA : Expert Morphométrie")
 
@@ -59,6 +75,14 @@ with tabs[0]:
     if 'step' not in st.session_state: st.session_state.step = 1
     
     with st.form("form_global", clear_on_submit=False):
+        st.subheader("📍 Localisation de l'étude")
+        col_w, col_c = st.columns(2)
+        wilaya_sel = col_w.selectbox("Wilaya", list_wilayas)
+        w_clean = wilaya_sel.split("-")[-1].strip()
+        communes_possibles = df_communes[df_communes['wilaya_name'] == w_clean]['commune_name'].tolist()
+        commune_sel = col_c.selectbox("Commune", communes_possibles if communes_possibles else ["Saisir..."])
+
+        st.divider()
         st.subheader("🆔 Identification de l'animal")
         
         c1, c2 = st.columns([2, 1])
