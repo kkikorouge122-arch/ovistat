@@ -93,8 +93,6 @@ with tabs[0]:
             # Sécurité : Si le fichier CSV ne répond pas, on laisse l'utilisateur écrire
             commune_sel = col_c.text_input("Commune (Saisie libre)", value="Djelfa Centre")
             st.warning(f"⚠️ '{w_clean}' non trouvé dans le fichier CSV. Saisie manuelle activée.")
-
-
         c1, c2, c3 = st.columns(3)
         id_in = c1.text_input("ID Animal")
         age_in = c2.number_input("Âge (mois)", value=12)
