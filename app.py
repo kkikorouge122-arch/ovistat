@@ -195,23 +195,21 @@ with tabs[2]:
     if not data.empty:
         # 1. Sélection de l'animal
         target = st.selectbox("Sélectionner l'animal pour l'audit complet", data["ID"].unique())
-        # On récupère la ligne correspondante
         anim = data[data["ID"] == target].iloc[-1] 
         
-        # 2. Calculs des Indices (Sécurisés)
+        # --- DÉBUT DU BLOC SÉCURISÉ ---
         try:
-            # On récupère les valeurs pour les calculs
-            poids_val = anim['Poids'] if 'Poids' in anim else 0
+            # Récupération des valeurs
+            p_val = anim['Poids'] if 'Poids' in anim else 0
             lb_val = anim['LB'] if 'LB' in anim else 0
             tp_val = anim['TP'] if 'TP' in anim else 0
             hg_val = anim['HG'] if 'HG' in anim else 0
             
-            # Formules mathématiques
-            ic = poids_val / lb_val if lb_val > 0 else 0
+            # Calculs des Indices
+            ic = p_val / lb_val if lb_val > 0 else 0
             ir = (tp_val**2) / hg_val if hg_val > 0 else 0
             ip = hg_val / lb_val if lb_val > 0 else 0
             
-            # 3. Affichage des Scores
             st.subheader("🥇 Scores Individuels")
             c1, c2, c3 = st.columns(3)
             with c1:
@@ -224,60 +222,20 @@ with tabs[2]:
                 format_anim = "Longiligne" if ip < 0.95 else "Médioligne"
                 st.metric("Format", format_anim)
                 st.caption(f"Ratio HG/LB: {ip:.2f}")
-# --- ONGLET 3 : ANALYSE, BENCHMARK & CERTIFICAT ---
-with tabs[2]:
-    st.header("🧠 Expertise & Benchmark Zootechnique")
-    
-    if not data.empty:
-        # 1. SÉLECTION DE L'ANIMAL
-        target = st.selectbox("Sélectionner l'animal pour l'audit complet", data["ID"].unique())
-        anim = data[data["ID"] == target].iloc[-1] 
-        
-        try:
-            # --- PARTIE A : SCORES INDIVIDUELS ---
-            p_val = anim['Poids'] if 'Poids' in anim else 0
-            hg_val = anim['HG'] if 'HG' in anim else 1
-            lb_val = anim['LB'] if 'LB' in anim else 1
-            tp_val = anim['TP'] if 'TP' in anim else 1
-            
-            ic = p_val / lb_val if lb_val > 0 else 0
-            ir = (tp_val**2) / hg_val if hg_val > 0 else 0
-            
-            st.subheader("🥇 Scores Individuels")
-            c1, c2 = st.columns(2)
-            c1.metric("Indice Viande", f"{ic:.2f}")
-            c2.metric("Indice Robustesse", f"{ir:.2f}")
 
-            if ic > 0.5:
-                st.success("✅ **Conseil IA :** Excellente conformation bouchère.")
-            else:
-                st.warning("⚠️ **Conseil IA :** Animal un peu frêle.")
-
-            # --- PARTIE B : BENCHMARK (COMPARAISON) ---
             st.divider()
-            st.subheader(f"📊 Benchmark : {target} vs Le Troupeau")
             
+            # --- PARTIE BENCHMARK ---
             if len(data) >= 2:
-                moyenne_poids = data['Poids'].mean()
-                diff_poids = ((p_val - moyenne_poids) / moyenne_poids) * 100 if moyenne_poids > 0 else 0
+                st.subheader(f"📊 Benchmark : {target} vs Troupeau")
+                moy_p = data['Poids'].mean()
                 rang = data['Poids'].rank(ascending=False).iloc[-1]
                 
                 cb1, cb2 = st.columns(2)
-                cb1.metric("Performance Poids", f"{p_val} kg", f"{diff_poids:.1f}% vs Moyenne")
+                cb1.metric("Poids Animal", f"{p_val} kg", f"{p_val-moy_p:.1f} kg vs Moy")
                 cb2.metric("Classement", f"{int(rang)} / {len(data)}")
 
-                # Graphique de Distribution
-                fig, ax = plt.subplots(figsize=(10, 4))
-                ax.hist(data['Poids'], bins=15, color='#d1dceb', edgecolor='#1f77b4', alpha=0.7)
-                ax.axvline(p_val, color='red', linestyle='--', linewidth=3, label=f"Position de {target}")
-                ax.axvline(moyenne_poids, color='green', linestyle='-', label="Moyenne Troupeau")
-                ax.legend()
-                st.pyplot(fig)
-            else:
-                st.info("💡 Statistiques de groupe bientôt disponibles (besoin de 2 animaux).")
-
-            # --- PARTIE C : GÉNÉRATION DU CERTIFICAT PDF ---
-            st.divider()
+            # --- GÉNÉRATION DU CERTIFICAT PDF ---
             st.subheader("📄 Certificat Officiel")
             if st.button(f"Générer le certificat pour {target}"):
                 pdf = FPDF()
@@ -289,18 +247,16 @@ with tabs[2]:
                 pdf.cell(0, 10, f"ID Animal : {target}", ln=True)
                 pdf.cell(0, 10, f"Race : {anim['Race']}", ln=True)
                 pdf.cell(0, 10, f"Indice Compacité : {ic:.2f}", ln=True)
-                pdf.cell(0, 10, f"Indice Robustesse : {ir:.2f}", ln=True)
                 
                 pdf_bytes = pdf.output(dest="S").encode("latin-1")
                 st.download_button(f"📥 Télécharger PDF {target}", data=pdf_bytes, file_name=f"Certificat_{target}.pdf")
 
         except Exception as e:
-            st.error(f"Erreur lors du calcul : {e}")
+            st.error(f"⚠️ Erreur lors du calcul des indices : {e}")
+        # --- FIN DU BLOC SÉCURISÉ ---
             
     else:
         st.info("📊 Les analyses apparaîtront après le premier enregistrement.")
-
-
 
 # --- ONGLET 4 : SANTÉ ---
 with tabs[3]:
