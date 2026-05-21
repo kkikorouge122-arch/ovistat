@@ -145,7 +145,7 @@ with tabs[1]:
         st.download_button("📥 Export Excel", data.to_csv(sep=';', index=False).encode('utf-8-sig'), "base.csv")
 # --- ONGLET 3 : ANALYSE ---
 with tabs[2]:st.info("Module d'analyse automatique des performances.")
-    if not data.empty:
+   if not data.empty:
         target = st.selectbox("Audit", data["ID"].unique())
         anim = data[data["ID"] == target].iloc[-1]
         try:
