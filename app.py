@@ -134,70 +134,73 @@ with tabs[1]:
         st.dataframe(data, use_container_width=True)
         st.download_button("📥 Export Excel", data.to_csv(sep=';', index=False).encode('utf-8-sig'), "OviStat_Data.csv")
 
-# --- ONGLET 3 : ANALYSE ---
+# --- ONGLET 3 : ANALYSE & CERTIFICAT ---
 with tabs[2]:
-    if not data.empty:
-        target = st.selectbox("Animal pour audit", data["ID"].unique())
-        anim = data[data["ID"] == target].iloc[-1]
-        
-        # Calcul Indices
-        ic = anim['Poids'] / anim['LB'] if anim['LB'] > 0 else 0
-        ir = (anim['TP']**2) / anim['HG'] if anim['HG'] > 0 else 0
-        
-        c1, c2 = st.columns(2)
-        c1.metric("Indice Viande", f"{ic:.2f}")
-        c2.metric("Indice Robustesse", f"{ir:.2f}")
-        
-        if st.button("📄 Générer Certificat PDF"):
-            pdf = FPDF(); pdf.add_page(); pdf.set_font("Arial", 'B', 16)
-            pdf.cell(200, 10, f"CERTIFICAT OVI-STAT : {target}", ln=True, align='C')
-            pdf.ln(10); pdf.set_font("Arial", '', 12)
-            pdf.cell(0, 10, f"ID: {target} | Race: {anim['Race']} | Poids: {anim['Poids']}kg", ln=True)
-            pdf.cell(0, 10, f"Indice Viande: {ic:.2f} | Robustesse: {ir:.2f}", ln=True)
-            st.download_button("📥 Télécharger PDF", pdf.output(dest="S").encode("latin-1"), f"Certificat_{target}.pdf")
-with tab3:
-    st.subheader("🧠 Scores et Indices Zootechniques")
+    st.header("🧠 Expertise & Benchmark Zootechnique")
     
     if not data.empty:
-        target = st.selectbox("Sélectionner l'animal pour l'audit", data["ID"].unique())
-        anim = data[data["ID"] == target].iloc[-1] # On prend la dernière mesure
+        # 1. Sélection de l'animal
+        target = st.selectbox("Sélectionner l'animal pour l'audit complet", data["ID"].unique())
+        # On récupère la ligne correspondante
+        anim = data[data["ID"] == target].iloc[-1] 
         
-        # --- CALCULS DES INDICES ---
-        # On utilise des 'try/except' pour éviter les erreurs si une valeur est à 0
+        # 2. Calculs des Indices (Sécurisés)
         try:
-            indice_compacite = anim['Poids_kg'] / anim['LB'] if anim['LB'] > 0 else 0
-            indice_anamorphose = (anim['TP']**2) / anim['HG'] if anim['HG'] > 0 else 0
-            indice_proportion = anim['HG'] / anim['LB'] if anim['LB'] > 0 else 0
+            # On récupère les valeurs pour les calculs
+            poids_val = anim['Poids'] if 'Poids' in anim else 0
+            lb_val = anim['LB'] if 'LB' in anim else 0
+            tp_val = anim['TP'] if 'TP' in anim else 0
+            hg_val = anim['HG'] if 'HG' in anim else 0
             
-            # --- AFFICHAGE DES SCORES ---
+            # Formules mathématiques
+            ic = poids_val / lb_val if lb_val > 0 else 0
+            ir = (tp_val**2) / hg_val if hg_val > 0 else 0
+            ip = hg_val / lb_val if lb_val > 0 else 0
+            
+            # 3. Affichage des Scores
+            st.subheader("🥇 Scores Individuels")
             c1, c2, c3 = st.columns(3)
-            
             with c1:
-                st.metric("Rendement Viande", f"{indice_compacite:.2f}")
+                st.metric("Rendement Viande", f"{ic:.2f}")
                 st.caption("Indice de Compacité")
-                
             with c2:
-                st.metric("Robustesse", f"{indice_anamorphose:.2f}")
+                st.metric("Robustesse", f"{ir:.2f}")
                 st.caption("Indice d'Anamorphose")
-                
             with c3:
-                # Interprétation du format
-                format_animal = "Longiligne" if indice_proportion < 0.95 else "Médioligne"
-                st.metric("Format", format_animal)
-                st.caption(f"Ratio HG/LB: {indice_proportion:.2f}")
+                format_anim = "Longiligne" if ip < 0.95 else "Médioligne"
+                st.metric("Format", format_anim)
+                st.caption(f"Ratio HG/LB: {ip:.2f}")
 
+            # 4. Conseils de l'IA
             st.divider()
-            
-            # --- CONSEIL DE L'IA ---
-            if indice_compacite < 0.5:
-                st.warning("💡 **Conseil IA :** Animal un peu frêle. Augmenter la part énergétique de la ration.")
+            if ic > 0.5:
+                st.success("✅ **Conseil IA :** Excellente conformation bouchère. Potentiel élevé.")
             else:
-                st.success("💡 **Conseil IA :** Excellente conformation bouchère. Potentiel reproducteur élevé.")
+                st.warning("⚠️ **Conseil IA :** Animal un peu frêle. Surveiller l'alimentation.")
+
+            # 5. Génération du Certificat PDF
+            st.subheader("📄 Certificat Officiel")
+            if st.button(f"Générer le certificat pour {target}"):
+                pdf = FPDF()
+                pdf.add_page()
+                pdf.set_font("Arial", 'B', 16)
+                pdf.cell(200, 10, "CERTIFICAT DE QUALITÉ OVISTAT IA", ln=True, align='C')
+                pdf.ln(10)
+                pdf.set_font("Arial", '', 12)
+                pdf.cell(0, 10, f"ID Animal : {target}", ln=True)
+                pdf.cell(0, 10, f"Race : {anim['Race']}", ln=True)
+                pdf.cell(0, 10, f"Indice Compacité : {ic:.2f}", ln=True)
+                pdf.cell(0, 10, f"Indice Robustesse : {ir:.2f}", ln=True)
+                
+                pdf_bytes = pdf.output(dest="S").encode("latin-1")
+                st.download_button(f"📥 Télécharger PDF {target}", data=pdf_bytes, file_name=f"Certificat_{target}.pdf")
 
         except Exception as e:
-            st.error(f"Mesures incomplètes pour le calcul des indices : {e}")
+            st.error(f"Erreur lors du calcul des indices : {e}")
+            
     else:
         st.info("📊 Les analyses apparaîtront après le premier enregistrement.")
+
 
 # --- ONGLET 4 : SANTÉ ---
 with tabs[3]:
