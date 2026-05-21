@@ -143,7 +143,6 @@ with tabs[1]:
                     data.to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
                     st.success("Mise à jour réussie !"); st.rerun()
         st.download_button("📥 Export Excel", data.to_csv(sep=';', index=False).encode('utf-8-sig'), "base.csv")
-
 # --- ONGLET 3 : ANALYSE ---
 with tabs[2]:st.info("Module d'analyse automatique des performances.")
     if not data.empty:
