@@ -221,60 +221,60 @@ with tabs[2]:
                 format_anim = "Longiligne" if ip < 0.95 else "Médioligne"
                 st.metric("Format", format_anim)
                 st.caption(f"Ratio HG/LB: {ip:.2f}")
-        # --- PARTIE B : BENCHMARK (COMPARAISON AU TROUPEAU) ---
-        st.divider()
-        st.subheader(f"📊 Benchmark : {target} vs Le Troupeau")
+# --- ONGLET 3 : ANALYSE, BENCHMARK & CERTIFICAT ---
+with tabs[2]:
+    st.header("🧠 Expertise & Benchmark Zootechnique")
+    
+    if not data.empty:
+        # 1. SÉLECTION DE L'ANIMAL
+        target = st.selectbox("Sélectionner l'animal pour l'audit complet", data["ID"].unique())
+        anim = data[data["ID"] == target].iloc[-1] 
         
-        if len(data) >= 2:
-            # 1. Calcul des moyennes du groupe
-            moyenne_poids = data['Poids'].mean()
-            moyenne_hg = data['HG'].mean()
+        try:
+            # --- PARTIE A : SCORES INDIVIDUELS ---
+            p_val = anim['Poids'] if 'Poids' in anim else 0
+            hg_val = anim['HG'] if 'HG' in anim else 1
+            lb_val = anim['LB'] if 'LB' in anim else 1
+            tp_val = anim['TP'] if 'TP' in anim else 1
             
-            # 2. Calcul de l'écart en %
-            poids_actuel = anim['Poids']
-            diff_poids = ((poids_actuel - moyenne_poids) / moyenne_poids) * 100
+            ic = p_val / lb_val if lb_val > 0 else 0
+            ir = (tp_val**2) / hg_val if hg_val > 0 else 0
             
-            c_b1, c_b2 = st.columns(2)
-            with c_b1:
-                st.metric("Performance Poids", f"{poids_actuel} kg", f"{diff_poids:.1f}% vs Moyenne")
-            with c_b2:
-                # Calcul du rang
-                rang = data['Poids'].rank(ascending=False).iloc[-1]
-                st.metric("Classement Poids", f"{int(rang)} / {len(data)}", delta="Position")
+            st.subheader("🥇 Scores Individuels")
+            c1, c2 = st.columns(2)
+            c1.metric("Indice Viande", f"{ic:.2f}")
+            c2.metric("Indice Robustesse", f"{ir:.2f}")
 
-            # 3. Graphique de Distribution
-            st.write("**Visualisation de la position dans le groupe**")
-            fig, ax = plt.subplots(figsize=(10, 4))
-            # On dessine l'histogramme du troupeau
-            ax.hist(data['Poids'], bins=15, color='#d1dceb', edgecolor='#1f77b4', alpha=0.7)
-            # On trace la ligne de l'animal sélectionné
-            ax.axvline(poids_actuel, color='red', linestyle='--', linewidth=3, label=f"Position de {target}")
-            # On trace la ligne de la moyenne
-            ax.axvline(moyenne_poids, color='green', linestyle='-', linewidth=2, label="Moyenne Troupeau")
-            
-            ax.set_xlabel("Poids (kg)")
-            ax.set_ylabel("Nombre d'animaux")
-            ax.legend()
-            st.pyplot(fig)
-            
-            # 4. Conclusion IA
-            if diff_poids > 10:
-                st.success(f"🌟 **Elite** : {target} est dans le peloton de tête. Fort potentiel génétique.")
-            elif diff_poids < -10:
-                st.warning(f"⚠️ **Attention** : {target} est significativement en dessous de la moyenne.")
-            else:
-                st.info(f"✅ **Standard** : {target} est parfaitement dans la moyenne du troupeau.")
-        else:
-            st.info("💡 Les statistiques de groupe s'activeront lorsque vous aurez au moins 2 animaux enregistrés.")
-
-            # 4. Conseils de l'IA
-            st.divider()
             if ic > 0.5:
-                st.success("✅ **Conseil IA :** Excellente conformation bouchère. Potentiel élevé.")
+                st.success("✅ **Conseil IA :** Excellente conformation bouchère.")
             else:
-                st.warning("⚠️ **Conseil IA :** Animal un peu frêle. Surveiller l'alimentation.")
+                st.warning("⚠️ **Conseil IA :** Animal un peu frêle.")
 
-            # 5. Génération du Certificat PDF
+            # --- PARTIE B : BENCHMARK (COMPARAISON) ---
+            st.divider()
+            st.subheader(f"📊 Benchmark : {target} vs Le Troupeau")
+            
+            if len(data) >= 2:
+                moyenne_poids = data['Poids'].mean()
+                diff_poids = ((p_val - moyenne_poids) / moyenne_poids) * 100 if moyenne_poids > 0 else 0
+                rang = data['Poids'].rank(ascending=False).iloc[-1]
+                
+                cb1, cb2 = st.columns(2)
+                cb1.metric("Performance Poids", f"{p_val} kg", f"{diff_poids:.1f}% vs Moyenne")
+                cb2.metric("Classement", f"{int(rang)} / {len(data)}")
+
+                # Graphique de Distribution
+                fig, ax = plt.subplots(figsize=(10, 4))
+                ax.hist(data['Poids'], bins=15, color='#d1dceb', edgecolor='#1f77b4', alpha=0.7)
+                ax.axvline(p_val, color='red', linestyle='--', linewidth=3, label=f"Position de {target}")
+                ax.axvline(moyenne_poids, color='green', linestyle='-', label="Moyenne Troupeau")
+                ax.legend()
+                st.pyplot(fig)
+            else:
+                st.info("💡 Statistiques de groupe bientôt disponibles (besoin de 2 animaux).")
+
+            # --- PARTIE C : GÉNÉRATION DU CERTIFICAT PDF ---
+            st.divider()
             st.subheader("📄 Certificat Officiel")
             if st.button(f"Générer le certificat pour {target}"):
                 pdf = FPDF()
@@ -292,10 +292,11 @@ with tabs[2]:
                 st.download_button(f"📥 Télécharger PDF {target}", data=pdf_bytes, file_name=f"Certificat_{target}.pdf")
 
         except Exception as e:
-            st.error(f"Erreur lors du calcul des indices : {e}")
+            st.error(f"Erreur lors du calcul : {e}")
             
     else:
         st.info("📊 Les analyses apparaîtront après le premier enregistrement.")
+
 
 
 # --- ONGLET 4 : SANTÉ ---
