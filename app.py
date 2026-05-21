@@ -33,6 +33,10 @@ COLONNES = [
 COL_SANTE = ["Date", "ID", "Type", "Produit", "Veterinaire", "Prochain_RDV"]
 
 # --- 2. FONCTIONS ---
+@st.cache_resource
+def load_yolo_model():
+    return YOLO('yolov8n.pt')
+
 @st.cache_data
 def get_algeria_geo():
     wilayas = [
