@@ -77,46 +77,40 @@ st.title("🐑 OviStat IA : Expert Morphométrie")
 tabs = st.tabs(["📥 Saisie", "🔍 Historique", "📊 Analyse", "🩺 Santé", "ℹ️ À Propos"])
 
 # --- ONGLET 1 : SAISIE SÉQUENTIELLE ---
-        wilaya_sel = col_w.selectbox("Wilaya", list_wilayas)
-        
-        # Nettoyage ultra-précis du nom
-        w_clean = wilaya_sel.split("-")[-1].strip() 
-
-        # Filtrage avec gestion des espaces et des majuscules
-        mask = df_communes['wilaya_name'].str.strip().str.lower() == w_clean.lower()
-        communes_possibles = df_communes[mask]['commune_name'].unique().tolist()
-        
-        if not communes_possibles:
-            commune_sel = col_c.selectbox("Commune", ["Aucune commune trouvée"])
-            st.warning(f"⚠️ Vérifiez l'orthographe de '{w_clean}' dans le CSV")
-        else:
-            commune_sel = col_c.selectbox("Commune", sorted(communes_possibles))
-
+       # --- ONGLET 1 : SAISIE ---
 with tabs[0]:
     if 'step' not in st.session_state: st.session_state.step = 1
-    
     with st.form("form_global", clear_on_submit=False):
         st.subheader("📍 Localisation de l'étude")
         col_w, col_c = st.columns(2)
+        
+        # Sélection Wilaya
         wilaya_sel = col_w.selectbox("Wilaya", list_wilayas)
+        
+        # Nettoyage du nom pour le filtrage
         w_clean = wilaya_sel.split("-")[-1].strip()
-        communes_possibles = df_communes[df_communes['wilaya_name'] == w_clean]['commune_name'].tolist()
-        commune_sel = col_c.selectbox("Commune", communes_possibles if communes_possibles else ["Saisir..."])
+        
+        # Filtrage des communes (sécurisé)
+        if not df_communes.empty:
+            mask = df_communes['wilaya_name'].str.strip().str.lower() == w_clean.lower()
+            communes_possibles = df_communes[mask]['commune_name'].unique().tolist()
+        else:
+            communes_possibles = []
+
+        if not communes_possibles:
+            commune_sel = col_c.selectbox("Commune", ["Saisie manuelle nécessaire"])
+        else:
+            commune_sel = col_c.selectbox("Commune", sorted(communes_possibles))
 
         st.divider()
-        st.subheader("🆔 Identification de l'animal")
+        st.subheader("🆔 Identification")
+        c1, c2, c3 = st.columns(3)
+        id_in = c1.text_input("ID / Boucle (Vide = Auto-ID)")
+        age_in = c2.number_input("Âge (mois)", value=12)
+        race_in = c3.selectbox("Race", ["Ouled Djellal", "Rembi", "Hamra", "Taadmit"])
         
-        c1, c2 = st.columns([2, 1])
-        
-        # 1. Gestion de l'ID (Manuel ou Automatique pour étude)
-        id_in = c1.text_input("ID / Code Boucle (Laissez vide pour Auto-ID)", key="input_id")
-        
-        # Petit texte explicatif pour vos collaborateurs
-        st.caption("💡 Si l'animal n'a pas de code, le système générera un ID unique 'TEMP-...' lors de l'enregistrement.")
+        # ... la suite de votre code photo et mensurations ...
 
-        c_age, c_race = st.columns(2)
-        age_in = c_age.number_input("Âge (mois)", value=12)
-        race_in = c_race.selectbox("Race", ["Ouled Djellal", "Rembi", "Hamra", "Taadmit"])
 
         st.divider()
         
