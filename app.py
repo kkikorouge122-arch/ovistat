@@ -221,6 +221,51 @@ with tabs[2]:
                 format_anim = "Longiligne" if ip < 0.95 else "Médioligne"
                 st.metric("Format", format_anim)
                 st.caption(f"Ratio HG/LB: {ip:.2f}")
+        # --- PARTIE B : BENCHMARK (COMPARAISON AU TROUPEAU) ---
+        st.divider()
+        st.subheader(f"📊 Benchmark : {target} vs Le Troupeau")
+        
+        if len(data) >= 2:
+            # 1. Calcul des moyennes du groupe
+            moyenne_poids = data['Poids'].mean()
+            moyenne_hg = data['HG'].mean()
+            
+            # 2. Calcul de l'écart en %
+            poids_actuel = anim['Poids']
+            diff_poids = ((poids_actuel - moyenne_poids) / moyenne_poids) * 100
+            
+            c_b1, c_b2 = st.columns(2)
+            with c_b1:
+                st.metric("Performance Poids", f"{poids_actuel} kg", f"{diff_poids:.1f}% vs Moyenne")
+            with c_b2:
+                # Calcul du rang
+                rang = data['Poids'].rank(ascending=False).iloc[-1]
+                st.metric("Classement Poids", f"{int(rang)} / {len(data)}", delta="Position")
+
+            # 3. Graphique de Distribution
+            st.write("**Visualisation de la position dans le groupe**")
+            fig, ax = plt.subplots(figsize=(10, 4))
+            # On dessine l'histogramme du troupeau
+            ax.hist(data['Poids'], bins=15, color='#d1dceb', edgecolor='#1f77b4', alpha=0.7)
+            # On trace la ligne de l'animal sélectionné
+            ax.axvline(poids_actuel, color='red', linestyle='--', linewidth=3, label=f"Position de {target}")
+            # On trace la ligne de la moyenne
+            ax.axvline(moyenne_poids, color='green', linestyle='-', linewidth=2, label="Moyenne Troupeau")
+            
+            ax.set_xlabel("Poids (kg)")
+            ax.set_ylabel("Nombre d'animaux")
+            ax.legend()
+            st.pyplot(fig)
+            
+            # 4. Conclusion IA
+            if diff_poids > 10:
+                st.success(f"🌟 **Elite** : {target} est dans le peloton de tête. Fort potentiel génétique.")
+            elif diff_poids < -10:
+                st.warning(f"⚠️ **Attention** : {target} est significativement en dessous de la moyenne.")
+            else:
+                st.info(f"✅ **Standard** : {target} est parfaitement dans la moyenne du troupeau.")
+        else:
+            st.info("💡 Les statistiques de groupe s'activeront lorsque vous aurez au moins 2 animaux enregistrés.")
 
             # 4. Conseils de l'IA
             st.divider()
