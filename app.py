@@ -161,7 +161,7 @@ with tabs[0]:
             # Si l'ID est vide, on génère un ID temporaire basé sur l'horodatage
             id_final = id_in if id_in else f"TEMP-{datetime.now().strftime('%d%H%M%S')}"
             
-            row = [date.today(), id_final, race_in, age_in, poids, hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp, lc_cornes, lt_te, lt_la, lo_lo, lo_la, tc, ly, ts, ps, lg, ll, ration_val]
+            row = [date.today(), id_final, race_in, age_in, poids, hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp, lc_cornes, lt_te, lt_la, lo_lo, lo_la, tc, ly, ts, ps, lg, ll,wilaya_sel, commune_sel, ration_val]
             pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
             
             st.session_state.step = 1 # On remet le scan à zéro
