@@ -125,37 +125,68 @@ with tabs[0]:
             row = [date.today(), id_final, race_in, age_in, poids, hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp, lc_cornes, lt_tete, lt_la, lo_lo, lo_la, tc, ly, ts, ps, lg, ll, wilaya_sel, commune_sel, round(poids*0.035,2)]
             pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
             st.session_state.step = 1; st.success(f"Enregistré : {id_final}"); st.rerun()
-
-# --- ONGLET 2 : HISTORIQUE & MODIFICATIONS ---
+# --- ONGLET 2 : HISTORIQUE & GESTION ---
 with tabs[1]:
     st.subheader("📋 Gestion de la base de données")
+    
     if not data.empty:
-        df_v = data.copy()
-        df_v.insert(0, 'Statut', df_v['ID'].apply(lambda x: "⭐ Officiel" if "TEMP-" not in str(x) else "🕒 Temporaire"))
-        st.dataframe(df_v, use_container_width=True)
+        # 1. Affichage du tableau avec Statut Statistique
+        df_visu = data.copy()
+        df_visu.insert(0, 'Statut', df_visu['ID'].apply(lambda x: "⭐ Officiel" if "TEMP-" not in str(x) else "🕒 Temporaire"))
+        st.dataframe(df_visu, use_container_width=True)
         
         st.divider()
-        st.subheader("🛠️ Modifier ou Supprimer")
-        id_target = st.selectbox("Choisir l'ID de l'animal", data["ID"].unique())
         
-        c_m1, c_m2 = st.columns(2)
-        if c_m1.button(f"❌ Supprimer {id_target}", type="primary"):
-            data[data["ID"] != id_target].to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
+        # 2. Section Modification et Suppression
+        st.subheader("🛠️ Correction d'erreurs")
+        id_a_gerer = st.selectbox("Sélectionner l'ID de l'animal", data["ID"].unique(), key="sel_gerer")
+        
+        col_action1, col_col_action2 = st.columns(2)
+        
+        # --- BOUTON SUPPRIMER ---
+        if col_action1.button(f"❌ Supprimer la fiche {id_a_gerer}", type="primary"):
+            df_new = data[data["ID"] != id_a_gerer]
+            df_new.to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
+            st.success(f"Fiche {id_a_gerer} supprimée.")
             st.rerun()
+
+        # --- FORMULAIRE MODIFIER (POIDS & HG UNIQUEMENT) ---
+        if col_col_action2.checkbox(f"📝 Modifier Poids/HG de {id_a_gerer}"):
+            # Récupération de la ligne actuelle
+            ligne_actuelle = data[data["ID"] == id_a_gerer].iloc[-1]
             
-        if c_m2.checkbox(f"📝 Modifier {id_target}"):
-            old = data[data["ID"] == id_target].iloc[-1]
-            with st.form("edit_form"):
-                new_p = st.number_input("Nouveau Poids", value=float(old["Poids"]))
-                new_hg = st.number_input("Nouveau HG", value=float(old["HG"]))
-                if st.form_submit_button("💾 Sauvegarder"):
-                    df_clean = data[data["ID"] != id_target]
-                    new_line = old.copy()
-                    new_line["Poids"], new_line["HG"] = new_p, new_hg
-                    pd.concat([df_clean, pd.DataFrame([new_line])]).to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
+            with st.form("quick_edit"):
+                st.write(f"Modification rapide pour **{id_a_gerer}**")
+                
+                # On ne propose que Poids et HG à la modification
+                new_p = st.number_input("Nouveau Poids (kg)", value=float(ligne_actuelle["Poids"]))
+                new_h = st.number_input("Nouveau Garrot (HG en cm)", value=float(ligne_actuelle["HG"]))
+                
+                if st.form_submit_button("💾 Sauvegarder les changements"):
+                    # On retire l'ancienne ligne
+                    df_base = data[data["ID"] != id_a_gerer]
+                    
+                    # On crée la nouvelle ligne en gardant toutes les autres mesures intactes
+                    nouvelle_ligne = ligne_actuelle.copy()
+                    nouvelle_ligne["Poids"] = new_p
+                    nouvelle_ligne["HG"] = new_h
+                    nouvelle_ligne["Date"] = date.today().strftime("%Y-%m-%d")
+                    # Recalcul de la ration automatique basé sur le nouveau poids
+                    nouvelle_ligne["Ration"] = round(new_p * 0.035, 2)
+                    
+                    # Fusion et sauvegarde
+                    df_final = pd.concat([df_base, pd.DataFrame([nouvelle_ligne])], ignore_index=True)
+                    df_final.to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
+                    
+                    st.success("Mise à jour effectuée !")
                     st.rerun()
-        
-        st.download_button("📥 Export Excel", data.to_csv(sep=';', index=False).encode('utf-8-sig'), "base.csv")
+
+        st.divider()
+        # Bouton export pour Excel
+        st.download_button("📥 Télécharger CSV pour Excel", data.to_csv(sep=';', index=False).encode('utf-8-sig'), f"Export_OviStat_{date.today()}.csv")
+    else:
+        st.info("La base de données est vide.")
+
 
 # --- ONGLET 3 : ANALYSE ---
 with tabs[2]:
