@@ -1,109 +1,109 @@
-wilaya_name;commune_name
-Adrar;Timekten
-Adrar;Bouda
-Adrar;Ouled Ahmed Timmi
-Adrar;Adrar
-Adrar;Fenoughil
-Adrar;In Zghmir
-Adrar;Reggane
-Adrar;Sali
-Adrar;Sebaa
-Adrar;Tsabit
-Adrar;Tamest
-Adrar;Tamantit
-Adrar;Tit
-Adrar;Zaouiet Kounta
-Adrar;Akabli
-Adrar;Aoulef
-Chlef;Talassa
-Chlef;Zeboudja
-Chlef;El Hadjadj
-Chlef;Ouled Ben Abdelkader
-Chlef;Ain Merane
-Chlef;Breira
-Chlef;Ouled Abbes
-Chlef;Oued Fodda
-Chlef;Beni Rached
-Chlef;Herenfa
-Chlef;Tadjena
-Chlef;El Marsa
-Chlef;Chlef
-Chlef;Oum Drou
-Chlef;Sendjas
-Chlef;Sidi Abderrahmane
-Chlef;Sidi Akkacha
-Chlef;Tenes
-Chlef;Beni  Bouattab
-Chlef;El Karimia
-Chlef;Harchoun
-Chlef;Bouzeghaia
-Chlef;Taougrit
-Chlef;Beni Haoua
-Chlef;Abou El Hassane
-Chlef;Oued Goussine
-Chlef;Chettia
-Chlef;Moussadek
-Chlef;Ouled Fares
-Chlef;Boukadir
-Chlef;Oued Sly
-Chlef;Sobha
-Chlef;Benairia
-Chlef;Labiod Medjadja
-Chlef;Dahra
-Laghouat;El Beidha
-Laghouat;Gueltat Sidi Saad
-Laghouat;Brida
-Laghouat;Ain Sidi Ali
-Laghouat;Tadjemout
-Laghouat;Hadj Mechri
-Laghouat;Taouiala
-Laghouat;El Ghicha
-Laghouat;Tadjrouna
-Laghouat;Sebgag
-Laghouat;Sidi Bouzid
-Laghouat;Oued Morra
-Laghouat;Laghouat
-Laghouat;Oued M'zi
-Laghouat;Ksar El Hirane
-Laghouat;El Assafia
-Laghouat;Sidi Makhlouf
-Laghouat;Hassi Delaa
-Laghouat;Hassi R'mel
-Laghouat;Ain Madhi
-Laghouat;El Haouaita
-Laghouat;Kheneg
-Laghouat;Benacer Benchohra
-Laghouat;Aflou
-Oum El Bouaghi;Fkirina
-Oum El Bouaghi;El Fedjoudj Boughrara Sa
-Oum El Bouaghi;Ain Fekroun
-Oum El Bouaghi;Rahia
-Oum El Bouaghi;Meskiana
-Oum El Bouaghi;El Belala
-Oum El Bouaghi;Behir Chergui
-Oum El Bouaghi;Ksar Sbahi
-Oum El Bouaghi;Souk Naamane
-Oum El Bouaghi;Ouled Zouai
-Oum El Bouaghi;Oum El Bouaghi
-Oum El Bouaghi;Ain Babouche
-Oum El Bouaghi;Ain Zitoun
-Oum El Bouaghi;Bir Chouhada
-Oum El Bouaghi;Ain Beida
-Oum El Bouaghi;Berriche
-Oum El Bouaghi;Zorg
-Oum El Bouaghi;Ain M'lila
-Oum El Bouaghi;Ouled Gacem
-Oum El Bouaghi;Ouled Hamla
-Oum El Bouaghi;El Amiria
-Oum El Bouaghi;Sigus
-Oum El Bouaghi;Oued Nini
-Oum El Bouaghi;Ain Diss
-Oum El Bouaghi;Dhalaa
-Oum El Bouaghi;El Djazia
-Oum El Bouaghi;Ain Kercha
-Oum El Bouaghi;El Harmilia
-Oum El Bouaghi;Hanchir Toumghani
-Batna;Maafa
+wilaya_name,commune_name
+Adrar,Timekten
+Adrar,Bouda
+Adrar,Ouled Ahmed Timmi
+Adrar,Adrar
+Adrar,Fenoughil
+Adrar,In Zghmir
+Adrar,Reggane
+Adrar,Sali
+Adrar,Sebaa
+Adrar,Tsabit
+Adrar,Tamest
+Adrar,Tamantit
+Adrar,Tit
+Adrar,Zaouiet Kounta
+Adrar,Akabli
+Adrar,Aoulef
+Chlef,Talassa
+Chlef,Zeboudja
+Chlef,El Hadjadj
+Chlef,Ouled Ben Abdelkader
+Chlef,Ain Merane
+Chlef,Breira
+Chlef,Ouled Abbes
+Chlef,Oued Fodda
+Chlef,Beni Rached
+Chlef,Herenfa
+Chlef,Tadjena
+Chlef,El Marsa
+Chlef,Chlef
+Chlef,Oum Drou
+Chlef,Sendjas
+Chlef,Sidi Abderrahmane
+Chlef,Sidi Akkacha
+Chlef,Tenes
+Chlef,Beni  Bouattab
+Chlef,El Karimia
+Chlef,Harchoun
+Chlef,Bouzeghaia
+Chlef,Taougrit
+Chlef,Beni Haoua
+Chlef,Abou El Hassane
+Chlef,Oued Goussine
+Chlef,Chettia
+Chlef,Moussadek
+Chlef,Ouled Fares
+Chlef,Boukadir
+Chlef,Oued Sly
+Chlef,Sobha
+Chlef,Benairia
+Chlef,Labiod Medjadja
+Chlef,Dahra
+Laghouat,El Beidha
+Laghouat,Gueltat Sidi Saad
+Laghouat,Brida
+Laghouat,Ain Sidi Ali
+Laghouat,Tadjemout
+Laghouat,Hadj Mechri
+Laghouat,Taouiala
+Laghouat,El Ghicha
+Laghouat,Tadjrouna
+Laghouat,Sebgag
+Laghouat,Sidi Bouzid
+Laghouat,Oued Morra
+Laghouat,Laghouat
+Laghouat,Oued M'zi
+Laghouat,Ksar El Hirane
+Laghouat,El Assafia
+Laghouat,Sidi Makhlouf
+Laghouat,Hassi Delaa
+Laghouat,Hassi R'mel
+Laghouat,Ain Madhi
+Laghouat,El Haouaita
+Laghouat,Kheneg
+Laghouat,Benacer Benchohra
+Laghouat,Aflou
+Oum El Bouaghi,Fkirina
+Oum El Bouaghi,El Fedjoudj Boughrara Sa
+Oum El Bouaghi,Ain Fekroun
+Oum El Bouaghi,Rahia
+Oum El Bouaghi,Meskiana
+Oum El Bouaghi,El Belala
+Oum El Bouaghi,Behir Chergui
+Oum El Bouaghi,Ksar Sbahi
+Oum El Bouaghi,Souk Naamane
+Oum El Bouaghi,Ouled Zouai
+Oum El Bouaghi,Oum El Bouaghi
+Oum El BouaghiAin Babouche
+Oum El Bouaghi,Ain Zitoun
+Oum El Bouaghi,Bir Chouhada
+Oum El Bouaghi,Ain Beida
+Oum El Bouaghi,Berriche
+Oum El Bouaghi,Zorg
+Oum El Bouaghi,Ain M'lila
+Oum El Bouaghi,Ouled Gacem
+Oum El Bouaghi,Ouled Hamla
+Oum El Bouaghi,El Amiria
+Oum El Bouaghi,Sigus
+Oum El Bouaghi,Oued Nini
+Oum El Bouaghi,Ain Diss
+Oum El Bouaghi,Dhalaa
+Oum El Bouaghi,El Djazia
+Oum El Bouaghi,Ain Kercha
+Oum El Bouaghi,El Harmilia
+Oum El Bouaghi,Hanchir Toumghani
+Batna,Maafa
 Batna;Gosbat
 Batna;Timgad
 Batna;Taxlent
