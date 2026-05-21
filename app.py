@@ -76,23 +76,37 @@ tabs = st.tabs(["📥 Saisie", "🔍 Historique & Modif", "📊 Analyse", "🩺 
 with tabs[0]:
     if 'step' not in st.session_state: st.session_state.step = 1
     with st.form("form_global"):
-        st.subheader("📍 Localisation")
+                st.subheader("📍 Localisation de l'étude")
         col_w, col_c = st.columns(2)
         
-        wilaya_sel = col_w.selectbox("Sélectionnez la Wilaya", list_wilayas)
+        # 1. Sélection de la Wilaya avec une clé unique pour forcer le rafraîchissement
+        wilaya_sel = col_w.selectbox("Sélectionnez la Wilaya", list_wilayas, key="wilaya_choice")
         
-        # On extrait le nom propre (ex: on transforme "17-Djelfa" en "Djelfa")
+        # 2. On extrait le nom (ex: "Djelfa")
         w_clean = wilaya_sel.split("-")[-1].strip()
         
-        # On cherche les communes (insensible à la casse pour plus de sécurité)
-        communes_possibles = df_communes[df_communes['wilaya_name'].str.lower() == w_clean.lower()]['commune_name'].unique().tolist()
-        
-        if communes_possibles:
-            commune_sel = col_c.selectbox("Sélectionnez la Commune", sorted(communes_possibles))
+        # 3. Filtrage STRICT des communes
+        # On s'assure que le DataFrame n'est pas vide et on filtre
+        if not df_communes.empty:
+            # On compare le nom de la wilaya en minuscules pour éviter les erreurs
+            mask = df_communes['wilaya_name'].str.strip().str.lower() == w_clean.lower()
+            communes_possibles = df_communes[mask]['commune_name'].unique().tolist()
         else:
-            # Sécurité : Si le fichier CSV ne répond pas, on laisse l'utilisateur écrire
-            commune_sel = col_c.text_input("Commune (Saisie libre)", value="Djelfa Centre")
-            st.warning(f"⚠️ '{w_clean}' non trouvé dans le fichier CSV. Saisie manuelle activée.")
+            communes_possibles = []
+
+        # 4. Affichage de la liste correspondante
+        if communes_possibles:
+            # On ajoute un 'key' dynamique basé sur la wilaya pour forcer la mise à jour de la liste
+            commune_sel = col_c.selectbox(
+                f"Communes de {w_clean}", 
+                sorted(communes_possibles), 
+                key=f"commune_list_{w_clean}" 
+            )
+        else:
+            # Si le CSV est vide ou mal lu, on propose la saisie manuelle
+            commune_sel = col_c.text_input("Commune (Saisie manuelle)", key="commune_manual")
+            st.warning(f"⚠️ Aucune commune trouvée dans le fichier pour {w_clean}")
+
         c1, c2, c3 = st.columns(3)
         id_in = c1.text_input("ID Animal")
         age_in = c2.number_input("Âge (mois)", value=12)
