@@ -76,7 +76,7 @@ tabs = st.tabs(["📥 Saisie", "🔍 Historique & Modif", "📊 Analyse", "🩺 
 with tabs[0]:
     if 'step' not in st.session_state: st.session_state.step = 1
     with st.form("form_global"):
-                st.subheader("📍 Localisation")
+   st.subheader("📍 Localisation")
         col_w, col_c = st.columns(2)
         
         wilaya_sel = col_w.selectbox("Sélectionnez la Wilaya", list_wilayas)
