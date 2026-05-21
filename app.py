@@ -77,6 +77,21 @@ st.title("🐑 OviStat IA : Expert Morphométrie")
 tabs = st.tabs(["📥 Saisie", "🔍 Historique", "📊 Analyse", "🩺 Santé", "ℹ️ À Propos"])
 
 # --- ONGLET 1 : SAISIE SÉQUENTIELLE ---
+        wilaya_sel = col_w.selectbox("Wilaya", list_wilayas)
+        
+        # Nettoyage ultra-précis du nom
+        w_clean = wilaya_sel.split("-")[-1].strip() 
+
+        # Filtrage avec gestion des espaces et des majuscules
+        mask = df_communes['wilaya_name'].str.strip().str.lower() == w_clean.lower()
+        communes_possibles = df_communes[mask]['commune_name'].unique().tolist()
+        
+        if not communes_possibles:
+            commune_sel = col_c.selectbox("Commune", ["Aucune commune trouvée"])
+            st.warning(f"⚠️ Vérifiez l'orthographe de '{w_clean}' dans le CSV")
+        else:
+            commune_sel = col_c.selectbox("Commune", sorted(communes_possibles))
+
 with tabs[0]:
     if 'step' not in st.session_state: st.session_state.step = 1
     
