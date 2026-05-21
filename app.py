@@ -70,7 +70,7 @@ with tabs[0]:
         photo = st.camera_input("Capturer l'angle actuel")
         
         ia_hg, ia_tp = 0.0, 0.0
-     if photo:
+            if photo:
             if st.session_state.step < 3:
                 if st.form_submit_button(f"➡️ Valider et passer à l'étape {st.session_state.step + 1}"):
                     st.session_state.step += 1
