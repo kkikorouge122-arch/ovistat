@@ -244,15 +244,60 @@ with tabs[2]:
         anim = data[data["ID"] == target].iloc[-1]
         ic = anim['Poids'] / anim['LB'] if anim['LB'] > 0 else 0
         st.metric("Indice Viande", f"{ic:.2f}")
-
-# --- ONGLET 4 : SANTÉ ---
+        
+    # --- ONGLET 4 : SANTÉ & SUIVI MÉDICAL ---
 with tabs[3]:
-    st.header("🩺 Suivi Sanitaire")
-    with st.form("f_sante"):
-        ids = st.selectbox("Animal", data["ID"].unique()) if not data.empty else "N/A"
-        acte = st.text_input("Soin effectué")
-        if st.form_submit_button("💉 Enregistrer"):
-            st.success("Soin noté !")
+    st.header("🩺 Carnet de Santé Numérique")
+    
+    # Rappel des contacts en haut
+    with st.expander("📞 Urgences Vétérinaires"):
+        st.write("**Dr. Ahmed** : 06XX XX XX XX")
+        st.write("**Clinique Régionale** : 027 XX XX XX")
+
+    st.divider()
+    
+    # Formulaire détaillé
+    with st.form("form_sante_pro"):
+        c_s1, c_s2 = st.columns(2)
+        
+        # Sélection de l'animal dans la base actuelle
+        target_sante = c_s1.selectbox("Animal concerné", data["ID"].unique()) if not data.empty else "N/A"
+        
+        # Type d'acte
+        acte_type = c_s1.selectbox("Type d'intervention", 
+            ["Déparasitage (Interne/Externe)", "Vaccination", "Traitement Curatif", "Soin de plaie", "Suppléments/Vitamines"])
+        
+        # Maladie / Produit
+        pathologie = c_s2.selectbox("Pathologie / Motif", 
+            ["Prévention standard", "Enterotoxémie", "Fièvre Aphteuse", "Clavelée", "PPR", "Coccidiose", "Gale/Tiques", "Boiterie", "Autre"])
+        
+        produit_nom = c_s2.text_input("Nom du médicament / Vaccin")
+        
+        # Administration et Rappel
+        c_s3, c_s4, c_s5 = st.columns(3)
+        dose = c_s3.text_input("Dose (ml/mg)")
+        date_rappel = c_s4.date_input("Date de rappel prévue")
+        delai_viande = c_s5.number_input("Délai d'attente (jours)", value=0)
+        
+        note_obs = st.text_area("Observations particulières")
+
+        if st.form_submit_button("💉 ENREGISTRER L'INTERVENTION"):
+            nouveau_soin = [
+                date.today(), target_sante, acte_type, pathologie, 
+                produit_nom, dose, date_rappel, delai_viande, note_obs
+            ]
+            # Sauvegarde dans le fichier santé séparé
+            pd.DataFrame([nouveau_soin], columns=["Date", "ID", "Type", "Motif", "Produit", "Dose", "Rappel", "Delai", "Obs"]).to_csv(DB_SANTE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
+            st.success(f"Soin enregistré pour {target_sante} !")
+            st.rerun()
+
+    # Affichage de l'historique médical
+    if os.path.exists(DB_SANTE):
+        st.subheader("📋 Historique des soins")
+        df_sante = pd.read_csv(DB_SANTE, sep=';')
+        if not df_sante.empty:
+            st.dataframe(df_sante, use_container_width=True)
+
 
 # --- ONGLET 5 : À PROPOS & GUIDE UTILISATEUR ---
 with tabs[4]:
