@@ -76,14 +76,12 @@ tabs = st.tabs(["📥 Saisie", "🔍 Historique & Modif", "📊 Analyse", "🩺 
 with tabs[0]:
     st.subheader("📍 Localisation de l'étude")
     
-    # ON SORT LA GÉOGRAPHIE DU FORMULAIRE POUR QU'ELLE SOIT DYNAMIQUE
+    # Éléments dynamiques (Hors formulaire pour mise à jour instantanée)
     col_w, col_c = st.columns(2)
-    wilaya_sel = col_w.selectbox("Sélectionnez la Wilaya", list_wilayas, key="w_dyn")
+    wilaya_sel = col_w.selectbox("Wilaya", list_wilayas, key="w_dyn")
     
-    # Nettoyage du nom (ex: "17-Djelfa" -> "Djelfa")
+    # Filtrage
     w_clean = wilaya_sel.split("-")[-1].strip()
-    
-    # Filtrage en dehors du formulaire
     mask = df_communes['wilaya_name'].str.strip().str.lower() == w_clean.lower()
     communes_possibles = df_communes[mask]['commune_name'].unique().tolist()
     
@@ -91,13 +89,14 @@ with tabs[0]:
         commune_sel = col_c.selectbox(f"Communes de {w_clean}", sorted(communes_possibles), key="c_dyn")
     else:
         commune_sel = col_c.text_input("Commune (Saisie manuelle)", key="c_man")
-        st.warning(f"⚠️ Aucune commune trouvée pour {w_clean} dans le fichier CSV.")
+        st.warning(f"⚠️ Aucune commune trouvée pour {w_clean}")
 
     st.divider()
 
-    # MAINTENANT ON OUVRE LE FORMULAIRE POUR LE RESTE
+    # Début du cycle de scan
     if 'step' not in st.session_state: st.session_state.step = 1
     
+    # FORMULAIRE (Indentation de 4 espaces par rapport au bord gauche)
     with st.form("form_global", clear_on_submit=False):
         st.subheader("🆔 Identification & Mensurations")
         
@@ -121,7 +120,7 @@ with tabs[0]:
 
         st.divider()
         
-        # --- VOS 4 EXPANDERS ---
+        # Expanders
         with st.expander("1️⃣ Dimensions Corporelles", expanded=True):
             g1, g2, g3, g4 = st.columns(4)
             poids = g1.number_input("Poids (kg)", value=0.0)
@@ -159,11 +158,10 @@ with tabs[0]:
 
         if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
             id_f = id_in if id_in else f"TEMP-{datetime.now().strftime('%H%M%S')}"
-            # On utilise wilaya_sel et commune_sel définis au-dessus
             row = [date.today(), id_f, race_in, age_in, poids, hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp, lc_cornes, lt_tete, lt_la, lo_lo, lo_la, tc, ly, ts, ps, lg, ll, wilaya_sel, commune_sel, round(poids*0.035,2)]
             pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
             st.session_state.step = 1
-            st.success(f"✅ Enregistré avec succès dans {commune_sel} !")
+            st.success(f"✅ Enregistré !")
             st.rerun()
 
 
