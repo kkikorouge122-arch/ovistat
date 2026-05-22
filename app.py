@@ -258,6 +258,37 @@ with tabs[4]:
         """)
 
     st.divider()
+    # --- SECTION : MODE HORS-LIGNE (ROUE DE SECOURS) ---
+    st.divider()
+    with st.expander("📶 Comment utiliser OviStat SANS INTERNET ?"):
+        st.write("""
+        Si la 5G est absente à la ferme, vous pouvez transformer votre PC en serveur local. 
+        Suivez ces étapes sur votre ordinateur portable :
+        """)
+        
+        st.info("**1. Préparation du PC (Une seule fois)**")
+        st.code("""
+        # Installez Python sur www.python.org
+        # Ouvrez un terminal (CMD) et installez les outils :
+        pip install streamlit pandas ultralytics fpdf pillow
+        """, language="bash")
+        
+        st.info("**2. Téléchargement du logiciel**")
+        st.write("""
+        *   Copiez vos fichiers (`app.py`, `algeria_geo.csv`, `yolov8n.pt`) dans un dossier sur votre Bureau.
+        """)
+        
+        st.info("**3. Lancement du serveur local**")
+        st.write("Ouvrez le terminal dans votre dossier et tapez :")
+        st.code("streamlit run app.py", language="bash")
+        
+        st.success("**4. Connexion du téléphone (Zéro Data 5G)**")
+        st.write("""
+        1.  Connectez le PC et le téléphone au même réseau Wi-Fi (même s'il n'y a pas d'internet).
+        2.  Regardez l'adresse s'afficher dans le terminal du PC (ex: `192.168.1.XX:8501`).
+        3.  Tapez cette adresse dans le navigateur de votre téléphone Android.
+        4.  **OviStat fonctionne maintenant à 100% sans internet !**
+        """)
 
     # --- SECTION 2 : INFOS LOGICIEL ---
     col_a, col_b = st.columns([1, 2])
