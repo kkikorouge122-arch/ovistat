@@ -6,87 +6,37 @@ from ultralytics import YOLO
 from PIL import Image
 from fpdf import FPDF
 
+# --- 1. GESTION DU MODE NUIT (SESSION STATE) ---
+if 'dark_mode' not in st.session_state:
+    st.session_state.dark_mode = False
+if 'step' not in st.session_state:
+    st.session_state.step = 1
+    
 # --- 1. CONFIGURATION ---
 st.set_page_config(page_title="OviStat Vision Pro v2.1", page_icon="🐑", layout="wide")
 
-# --- STYLE CSS3 PREMIUM INTEGRAL ---
-st.markdown("""
+# Couleurs dynamiques selon le mode
+if st.session_state.dark_mode:
+    bg_c, card_c, text_c, border_c = "#0e1117", "#1d2129", "#e0e0e0", "#3d4450"
+    metric_bg = "#12141d"
+else:
+    bg_c, card_c, text_c, border_c = "#f8f9fa", "#ffffff", "#1f77b4", "#dee2e6"
+    metric_bg = "#ffffff"
+
+st.markdown(f"""
     <style>
-    /* 1. Fond général et typographie */
-    .main { background-color: #f8f9fa; }
-    
-    /* 2. Onglets Modernes (Tabs) */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background-color: #ffffff;
-        padding: 10px;
-        border-radius: 15px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-    .stTabs [data-baseweb="tab"] {
-        height: 60px;
-        border-radius: 10px;
-        background-color: #f1f3f5;
-        border: none;
-        transition: all 0.3s ease;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #1f77b4 !important;
-        color: white !important;
-        transform: scale(1.02);
-    }
-
-    /* 3. Boutons Géants pour le terrain */
-    .stButton>button {
-        width: 100%;
-        height: 55px;
-        border-radius: 12px;
-        font-weight: bold;
-        font-size: 18px !important;
-        text-transform: uppercase;
-        border: none;
-        background: linear-gradient(135deg, #1f77b4 0%, #125688 100%);
-        color: white;
-        box-shadow: 0 4px 15px rgba(31, 119, 180, 0.3);
-        transition: all 0.2s;
-    }
-    .stButton>button:active { transform: scale(0.98); }
-
-    /* 4. Métriques (Chiffres Poids/HG) stylisées */
-    [data-testid="stMetric"] {
-        background-color: white;
-        padding: 15px;
-        border-radius: 15px;
-        border-left: 5px solid #1f77b4;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-    [data-testid="stMetricValue"] { color: #1f77b4; font-size: 32px; }
-
-    /* 5. Cases de saisie (Inputs) plus lisibles */
-    .stNumberInput input, .stTextInput input {
-        height: 50px;
-        border-radius: 10px !important;
-        font-size: 18px !important;
-        border: 2px solid #dee2e6 !important;
-    }
-
-    /* 6. Expanders (Groupes de mesures) */
-    .streamlit-expanderHeader {
-        background-color: white;
-        border-radius: 10px !important;
-        font-weight: bold;
-        color: #1f77b4;
-    }
-
-    /* 7. Caméra plein cadre optimisée */
-    div[data-testid="stCameraInput"] video {
-        border: 4px solid #1f77b4;
-        border-radius: 20px;
-        object-fit: cover !important;
-    }
-
-    /* 8. Messages de succès/alerte */
-    .stAlert { border-radius: 15px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+    .stApp {{ background-color: {bg_c}; color: {text_c}; }}
+    /* Onglets Modernes */
+    .stTabs [data-baseweb="tab-list"] {{ gap: 8px; background-color: {card_c}; padding: 10px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }}
+    .stTabs [data-baseweb="tab"] {{ height: 50px; border-radius: 10px; background-color: {bg_c}; color: {text_c}; border: none; }}
+    /* Boutons Géants Terrain */
+    .stButton>button {{ width: 100%; height: 55px; border-radius: 12px; font-weight: bold; background: linear-gradient(135deg, #1f77b4 0%, #125688 100%); color: white; border: none; box-shadow: 0 4px 15px rgba(31,119,180,0.3); }}
+    /* Métriques & Cards */
+    [data-testid="stMetric"] {{ background-color: {metric_bg} !important; padding: 15px; border-radius: 15px; border-left: 5px solid #1f77b4 !important; border: 1px solid {border_c}; }}
+    /* Caméra */
+    div[data-testid="stCameraInput"] video {{ border: 4px solid #1f77b4; border-radius: 20px; object-fit: cover !important; }}
+    /* Expanders */
+    .streamlit-expanderHeader {{ background-color: {card_c} !important; color: #1f77b4 !important; border-radius: 10px !important; }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -141,7 +91,18 @@ for f, c in zip([DB_FILE, DB_SANTE], [COLONNES, COL_SANTE]):
 model = load_yolo_model()
 list_wilayas, df_communes = get_algeria_geo()
 data = load_data(DB_FILE, COLONNES)
-
+# --- 5. BARRE LATÉRALE (SIDEBAR) ---
+with st.sidebar:
+    st.image("https://flaticon.com", width=80)
+    st.title("OviStat Menu")
+    if st.button("🌙 Basculer Mode Nuit / Jour"):
+        st.session_state.dark_mode = not st.session_state.dark_mode
+        st.rerun()
+    st.divider()
+    with st.expander("⚙️ MAINTENANCE"):
+        if st.button("🗑️ Vider la base"):
+            if os.path.exists(DB_FILE): os.remove(DB_FILE)
+            st.rerun()
 # --- 3. INTERFACE ---
 st.title("🐑 OviStat IA v2.1")
 tabs = st.tabs(["📥 Saisie", "🔍 Historique & Modif", "📊 Analyse", "🩺 Santé", "ℹ️ À Propos"])
