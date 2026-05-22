@@ -9,13 +9,87 @@ from fpdf import FPDF
 # --- 1. CONFIGURATION ---
 st.set_page_config(page_title="OviStat Vision Pro v2.1", page_icon="🐑", layout="wide")
 
+# --- STYLE CSS3 PREMIUM INTEGRAL ---
 st.markdown("""
     <style>
-    .block-container { padding-top: 1rem; }
-    div[data-testid="stCameraInput"] video { width: 100% !important; object-fit: cover !important; border-radius: 15px; border: 3px solid #1f77b4; }
-    .stTabs [data-baseweb="tab"] { height: 50px; background-color: #f0f2f6; border-radius: 10px; }
+    /* 1. Fond général et typographie */
+    .main { background-color: #f8f9fa; }
+    
+    /* 2. Onglets Modernes (Tabs) */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+        background-color: #ffffff;
+        padding: 10px;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+    .stTabs [data-baseweb="tab"] {
+        height: 60px;
+        border-radius: 10px;
+        background-color: #f1f3f5;
+        border: none;
+        transition: all 0.3s ease;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #1f77b4 !important;
+        color: white !important;
+        transform: scale(1.02);
+    }
+
+    /* 3. Boutons Géants pour le terrain */
+    .stButton>button {
+        width: 100%;
+        height: 55px;
+        border-radius: 12px;
+        font-weight: bold;
+        font-size: 18px !important;
+        text-transform: uppercase;
+        border: none;
+        background: linear-gradient(135deg, #1f77b4 0%, #125688 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(31, 119, 180, 0.3);
+        transition: all 0.2s;
+    }
+    .stButton>button:active { transform: scale(0.98); }
+
+    /* 4. Métriques (Chiffres Poids/HG) stylisées */
+    [data-testid="stMetric"] {
+        background-color: white;
+        padding: 15px;
+        border-radius: 15px;
+        border-left: 5px solid #1f77b4;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    [data-testid="stMetricValue"] { color: #1f77b4; font-size: 32px; }
+
+    /* 5. Cases de saisie (Inputs) plus lisibles */
+    .stNumberInput input, .stTextInput input {
+        height: 50px;
+        border-radius: 10px !important;
+        font-size: 18px !important;
+        border: 2px solid #dee2e6 !important;
+    }
+
+    /* 6. Expanders (Groupes de mesures) */
+    .streamlit-expanderHeader {
+        background-color: white;
+        border-radius: 10px !important;
+        font-weight: bold;
+        color: #1f77b4;
+    }
+
+    /* 7. Caméra plein cadre optimisée */
+    div[data-testid="stCameraInput"] video {
+        border: 4px solid #1f77b4;
+        border-radius: 20px;
+        object-fit: cover !important;
+    }
+
+    /* 8. Messages de succès/alerte */
+    .stAlert { border-radius: 15px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
     </style>
     """, unsafe_allow_html=True)
+
 
 DB_FILE = "data_ovinstat_V16.csv"
 DB_SANTE = "data_sante_ovins.csv"
