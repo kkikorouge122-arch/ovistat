@@ -257,7 +257,6 @@ with tabs[4]:
         *   **Export :** Téléchargez le fichier global via le bouton 'Export Excel' pour vos rapports.
         """)
 
-    st.divider()
     # --- SECTION : MODE HORS-LIGNE (ROUE DE SECOURS) ---
     st.divider()
     with st.expander("📶 Comment utiliser OviStat SANS INTERNET ?"):
@@ -289,7 +288,7 @@ with tabs[4]:
         3.  Tapez cette adresse dans le navigateur de votre téléphone Android.
         4.  **OviStat fonctionne maintenant à 100% sans internet !**
         """)
-
+ st.divider()
     # --- SECTION 2 : INFOS LOGICIEL ---
     col_a, col_b = st.columns([1, 2])
     with col_a:
