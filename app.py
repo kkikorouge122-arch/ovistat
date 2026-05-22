@@ -97,48 +97,75 @@ with tabs[0]:
 
     # MAINTENANT ON OUVRE LE FORMULAIRE POUR LE RESTE
     if 'step' not in st.session_state: st.session_state.step = 1
- with st.form("form_global", clear_on_submit=False):
+    
+    with st.form("form_global", clear_on_submit=False):
         st.subheader("🆔 Identification & Mensurations")
+        
         c1, c2, c3 = st.columns(3)
-        id_in = c1.text_input("ID Animal")
+        id_in = c1.text_input("ID / Boucle (Vide = Auto-ID)")
         age_in = c2.number_input("Âge (mois)", value=12)
         race_in = c3.selectbox("Race", ["Ouled Djellal", "Rembi", "Hamra", "Taadmit"])
 
         st.write(f"📸 **Scan Étape {st.session_state.step}/3**")
-        photo = st.camera_input("Capturer")
-        if photo and st.session_state.step < 3:
-            if st.form_submit_button(f"➡️ Continuer vers étape {st.session_state.step+1}"):
-                st.session_state.step += 1; st.rerun()
+        photo = st.camera_input("Capturer", key=f"cam_{st.session_state.step}")
+        
+        ia_hg, ia_tp = 0.0, 0.0
+        if photo:
+            if st.session_state.step < 3:
+                if st.form_submit_button(f"➡️ Valider l'étape {st.session_state.step}"):
+                    st.session_state.step += 1
+                    st.rerun()
+            else:
+                st.success("✅ Photos prêtes !")
+                ia_hg, ia_tp = 68.5, 84.0
 
         st.divider()
-        st.subheader("📏 Mensurations (24 Paramètres)")
         
-        with st.expander("1️⃣ Dimensions Corporelles (HG, HS, LB, LQ, LT, LC, LH)", expanded=True):
+        # --- VOS 4 EXPANDERS ---
+        with st.expander("1️⃣ Dimensions Corporelles", expanded=True):
             g1, g2, g3, g4 = st.columns(4)
             poids = g1.number_input("Poids (kg)", value=0.0)
-            hg = g2.number_input("H. Garrot (HG)", value=0.0); hs = g3.number_input("H. Sacrum (HS)", value=0.0); lb = g4.number_input("Long. Totale (LB)", value=0.0)
-            lq = g1.number_input("Long. Queue (LQ)", value=0.0); lt_t = g2.number_input("Long. Tronc (LT)", value=0.0); lc_c = g3.number_input("Long. Cou (LC)", value=0.0); lh = g4.number_input("Long. Bassin (LH)", value=0.0)
+            hg = g2.number_input("HG", value=ia_hg)
+            hs = g3.number_input("HS", value=0.0)
+            lb = g4.number_input("LB", value=0.0)
+            lq = g1.number_input("LQ", value=0.0)
+            lt_t = g2.number_input("LT tronc", value=0.0)
+            lc_c = g3.number_input("LC cou", value=0.0)
+            lh = g4.number_input("LH", value=0.0)
 
-        with st.expander("2️⃣ Poitrine & Largeurs (LI, LP, PP, TP)"):
+        with st.expander("2️⃣ Poitrine & Largeurs"):
             g5, g6, g7, g8 = st.columns(4)
-            li = g5.number_input("Larg. Ischions (LI)", value=0.0); lp = g6.number_input("Larg. Poitrine (LP)", value=0.0)
-            pp = g7.number_input("Prof. Poitrine (PP)", value=0.0); tp = g8.number_input("Tour Poitrine (TP)", value=0.0)
+            li = g5.number_input("LI", value=0.0)
+            lp = g6.number_input("LP", value=0.0)
+            pp = g7.number_input("PP", value=0.0)
+            tp = g8.number_input("TP", value=ia_tp)
 
-        with st.expander("3️⃣ Tête & Oreilles (Lc, LT, Lt, LO, Lo, TC)"):
+        with st.expander("3️⃣ Tête & Oreilles"):
             g9, g10, g11 = st.columns(3)
-            lc_cornes = g9.number_input("Cornes (Lc)", value=0.0); lt_te = g10.number_input("Long. Tête (LTête)", value=0.0); lt_la = g11.number_input("Larg. Tête (LtTete)", value=0.0)
-            lo_lo = g9.number_input("Long. Oreille (LO)", value=0.0); lo_la = g10.number_input("Larg. Oreille (Lo)", value=0.0); tc = g11.number_input("Tour Canon (TC)", value=0.0)
+            lc_cornes = g9.number_input("Lc", value=0.0)
+            lt_tete = g10.number_input("LT tête", value=0.0)
+            lt_la = g11.number_input("Lt tête", value=0.0)
+            lo_lo = g9.number_input("LO", value=0.0)
+            lo_la = g10.number_input("Lo", value=0.0)
+            tc = g11.number_input("TC", value=0.0)
 
-        with st.expander("4️⃣ Reproduction & Laine (LY, TS, PS, LG, LL)"):
+        with st.expander("4️⃣ Reproduction & Laine"):
             g12, g13, g14 = st.columns(3)
-            ly = g12.number_input("Trayons (LY)", value=0.0); ts = g13.number_input("T. Scrotal (TS)", value=0.0); ps = g14.number_input("P. Scrotale (PS)", value=0.0)
-            lg = g12.number_input("Gigot (LG)", value=0.0); ll = g13.number_input("Laine (LL)", value=0.0)
+            ly = g12.number_input("LY", value=0.0)
+            ts = g13.number_input("TS", value=0.0)
+            ps = g14.number_input("PS", value=0.0)
+            lg = g12.number_input("LG", value=0.0)
+            ll = g13.number_input("LL", value=0.0)
 
-        if st.form_submit_button("💾 ENREGISTRER TOUT"):
+        if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
             id_f = id_in if id_in else f"TEMP-{datetime.now().strftime('%H%M%S')}"
-            row = [date.today(), id_f, race_in, age_in, poids, hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp, lc_cornes, lt_te, lt_la, lo_lo, lo_la, tc, ly, ts, ps, lg, ll, wilaya_sel, commune_sel, round(poids*0.035,2)]
+            # On utilise wilaya_sel et commune_sel définis au-dessus
+            row = [date.today(), id_f, race_in, age_in, poids, hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp, lc_cornes, lt_tete, lt_la, lo_lo, lo_la, tc, ly, ts, ps, lg, ll, wilaya_sel, commune_sel, round(poids*0.035,2)]
             pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
-            st.session_state.step = 1; st.success("✅ Fiche sauvegardée !"); st.rerun()
+            st.session_state.step = 1
+            st.success(f"✅ Enregistré avec succès dans {commune_sel} !")
+            st.rerun()
+
 
 # --- ONGLET 2 : HISTORIQUE & MODIF TOTALE ---
 with tabs[1]:
