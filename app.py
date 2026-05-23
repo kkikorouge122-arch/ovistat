@@ -219,8 +219,12 @@ with tabs[0]:
             else:
                 st.error("⚠️ Prenez d'abord la photo ci-dessous avant de valider.")
 
-    # 2. LA CAMÉRA (Placée en dessous)
-    photo = st.camera_input("Cliquez sur le cercle pour capturer", key=f"cam_step_{st.session_state.step}")
+       # 2. LA CAMÉRA (Clé unique basée sur l'étape et l'ID animal pour éviter le doublon)
+    # On ajoute id_in dans la clé pour qu'elle soit vraiment unique au monde
+    cam_key = f"camera_step_{st.session_state.step}_{id_in[:5]}"
+    
+    photo = st.camera_input("Cliquez sur le cercle pour capturer", key=cam_key)
+
     
     # Stockage temporaire de la photo pour le bouton du haut
     if photo:
