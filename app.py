@@ -10,21 +10,45 @@ from fpdf import FPDF
 if 'auth' not in st.session_state:
     st.session_state.auth = False
 
+# --- SYSTÈME DE SÉCURITÉ ET ACCUEIL INSTITUTIONNEL ---
+if 'auth' not in st.session_state:
+    st.session_state.auth = False
+
 def login():
-    st.title("🔒 Accès Sécurisé OviStat")
-    # Centrer le formulaire de connexion visuellement
-    with st.container():
-        pwd = st.text_input("Code d'accès terrain :", type="password")
-        if st.button("🔑 Déverrouiller le logiciel"):
-            if pwd == "Algeria2024": # <--- CHANGEZ VOTRE MOT DE PASSE ICI
-                st.session_state.auth = True
-                st.rerun()
-            else:
-                st.error("❌ Code incorrect")
-    st.stop() # Bloque tout le reste du code
+    # Mise en page centrée pour le logo et le titre
+    col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
+    
+    with col_l2:
+        st.image("https://flaticon.com", width=120) # Icône institutionnelle
+        st.title("🛡️ OviStat Vision Pro")
+        st.subheader("Système Expert de Morphométrie Ovine")
+        st.write("---")
+        
+        st.info("""
+        **📍 Projet de Recherche Zootechnique - Algérie**  
+        Ce logiciel est réservé aux chercheurs et agents de terrain autorisés.  
+        Toute capture de donnée est géolocalisée et sécurisée.
+        """)
+        
+        # Formulaire de connexion avec style
+        with st.container():
+            pwd = st.text_input("Veuillez saisir votre code d'accès confidentiel :", type="password")
+            if st.button("🔑 DÉVERROUILLER L'ACCÈS AU TERRAIN"):
+                if pwd == "Algeria2024": # <--- VOTRE MOT DE PASSE SECRET
+                    st.session_state.auth = True
+                    st.success("✅ Accès accordé. Initialisation de l'IA...")
+                    st.rerun()
+                else:
+                    st.error("❌ Code d'accès invalide. Échec de l'authentification.")
+        
+        st.write("---")
+        st.caption("© 2024 MERABIA KAWTHER - Tous droits réservés.")
+
+    st.stop() # Bloque l'application tant que l'accès n'est pas validé
 
 if not st.session_state.auth:
     login()
+
 
 # --- 1. GESTION DU MODE NUIT (SESSION STATE) ---
 if 'dark_mode' not in st.session_state:
