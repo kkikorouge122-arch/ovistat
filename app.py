@@ -304,8 +304,8 @@ with tabs[3]:
     
     # Rappel des contacts en haut
     with st.expander("📞 Urgences Vétérinaires"):
-        st.write("**Dr. Ahmed** : 06XX XX XX XX")
-        st.write("**Clinique Régionale** : 027 XX XX XX")
+        st.write("**Dr.Bensemane** : 0770908888")
+        st.write("**Clinique Vétérinaire** : 021386231/32")
 
     st.divider()
     
