@@ -6,12 +6,38 @@ from datetime import datetime, date
 from ultralytics import YOLO
 from PIL import Image
 from fpdf import FPDF
+# --- SYSTÈME DE SÉCURITÉ ET LOGIN ---
+if 'auth' not in st.session_state:
+    st.session_state.auth = False
+
+def login():
+    st.title("🔒 Accès Sécurisé OviStat")
+    # Centrer le formulaire de connexion visuellement
+    with st.container():
+        pwd = st.text_input("Code d'accès terrain :", type="password")
+        if st.button("🔑 Déverrouiller le logiciel"):
+            if pwd == "Algeria2024": # <--- CHANGEZ VOTRE MOT DE PASSE ICI
+                st.session_state.auth = True
+                st.rerun()
+            else:
+                st.error("❌ Code incorrect")
+    st.stop() # Bloque tout le reste du code
+
+if not st.session_state.auth:
+    login()
 
 # --- 1. GESTION DU MODE NUIT (SESSION STATE) ---
 if 'dark_mode' not in st.session_state:
     st.session_state.dark_mode = False
 if 'step' not in st.session_state:
     st.session_state.step = 1
+with st.sidebar:
+    st.divider()
+    st.subheader("🔐 Sécurité")
+    if st.button("🚪 Se déconnecter / Verrouiller"):
+        st.session_state.auth = False
+        st.success("Session fermée avec succès.")
+        st.rerun()
     
 # --- 1. CONFIGURATION ---
 st.set_page_config(page_title="OviStat Vision Pro v2.1", page_icon="🐑", layout="wide")
