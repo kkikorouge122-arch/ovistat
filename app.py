@@ -181,26 +181,27 @@ with tabs[0]:
         st.warning(f"⚠️ Aucune commune trouvée pour {w_clean}")
 
     st.divider()
-# --- PARTIE SCAN (HORS FORMULAIRE POUR ÉVITER LE BLOCAGE) ---
-    if 'step' not in st.session_state: st.session_state.step = 1
+    # --- ZONE DE SCAN SÉCURISÉE ---
+    st.write(f"### 📸 Étape {st.session_state.step}/3")
+    st.info(f"Veuillez capturer la vue de : **{['Profil', 'Dessus', 'Tête'][st.session_state.step-1]}**")
     
-    st.write(f"📸 **Étape {st.session_state.step}/3 :** " + ["Profil", "Dessus", "Tête"][st.session_state.step-1])
-    
-    # La caméra envoie l'image dès la prise
-    photo = st.camera_input("Capturer l'angle", key=f"cam_active_{st.session_state.step}")
+    # 1. La Caméra
+    photo = st.camera_input("Prendre la photo", key=f"capture_step_{st.session_state.step}")
 
-    # Le bouton de validation est toujours visible pour passer à la suite
-    if st.button(f"✅ VALIDER L'ÉTAPE {st.session_state.step}", use_container_width=True):
+    # 2. Le Bouton Valider (On le force à apparaître même si la photo n'est pas prise)
+    btn_label = f"➡️ VALIDER L'ÉTAPE {st.session_state.step} ET CONTINUER"
+    if st.button(btn_label, type="primary", use_container_width=True):
         if photo:
             if st.session_state.step < 3:
                 st.session_state.step += 1
                 st.rerun()
             else:
-                st.success("🎯 Scan IA complet ! Veuillez valider les mensurations en bas.")
+                st.success("🎯 Scan complet ! Suggestions IA appliquées en bas.")
         else:
-            st.warning("⚠️ Prenez une photo avant de valider.")
+            st.error("❌ Erreur : Vous devez d'abord cliquer sur le bouton de capture (le cercle) de la caméra.")
 
     st.divider()
+
 
     # --- PARTIE FORMULAIRE (POUR LES DONNÉES ET L'ENREGISTREMENT) ---
     with st.form("form_global_final", clear_on_submit=False):
