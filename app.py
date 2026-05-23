@@ -181,26 +181,33 @@ with tabs[0]:
         st.warning(f"⚠️ Aucune commune trouvée pour {w_clean}")
 
     st.divider()
-    # --- ZONE DE SCAN SÉCURISÉE ---
+       # --- ZONE DE SCAN MOBILE OPTIMISÉE ---
     st.write(f"### 📸 Étape {st.session_state.step}/3")
-    st.info(f"Veuillez capturer la vue de : **{['Profil', 'Dessus', 'Tête'][st.session_state.step-1]}**")
     
-    # 1. La Caméra
-    photo = st.camera_input("Prendre la photo", key=f"capture_step_{st.session_state.step}")
-
-    # 2. Le Bouton Valider (On le force à apparaître même si la photo n'est pas prise)
-    btn_label = f"➡️ VALIDER L'ÉTAPE {st.session_state.step} ET CONTINUER"
-    if st.button(btn_label, type="primary", use_container_width=True):
-        if photo:
-            if st.session_state.step < 3:
-                st.session_state.step += 1
-                st.rerun()
+    # 1. LE BOUTON DE VALIDATION (Placé en haut pour ne pas disparaître)
+    if st.session_state.step <= 3:
+        if st.button(f"✅ ÉTAPE SUIVANTE : VALIDER LA PHOTO {st.session_state.step}", type="primary", use_container_width=True):
+            # On vérifie si une photo existe déjà dans la mémoire
+            if 'last_photo' in st.session_state and st.session_state.last_photo is not None:
+                if st.session_state.step < 3:
+                    st.session_state.step += 1
+                    st.session_state.last_photo = None # Reset pour l'étape suivante
+                    st.rerun()
+                else:
+                    st.success("🎯 Scan IA complet !")
             else:
-                st.success("🎯 Scan complet ! Suggestions IA appliquées en bas.")
-        else:
-            st.error("❌ Erreur : Vous devez d'abord cliquer sur le bouton de capture (le cercle) de la caméra.")
+                st.error("⚠️ Prenez d'abord la photo ci-dessous avant de valider.")
+
+    # 2. LA CAMÉRA (Placée en dessous)
+    photo = st.camera_input("Cliquez sur le cercle pour capturer", key=f"cam_step_{st.session_state.step}")
+    
+    # Stockage temporaire de la photo pour le bouton du haut
+    if photo:
+        st.session_state.last_photo = photo
+        st.success(f"Photo {st.session_state.step} capturée ! Cliquez sur le bouton BLEU en haut ⬆️")
 
     st.divider()
+
 
 
     # --- PARTIE FORMULAIRE (POUR LES DONNÉES ET L'ENREGISTREMENT) ---
