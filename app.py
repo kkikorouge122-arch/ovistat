@@ -221,9 +221,13 @@ with tabs[0]:
 
        # 2. LA CAMÉRA (Clé unique basée sur l'étape et l'ID animal pour éviter le doublon)
     # On ajoute id_in dans la clé pour qu'elle soit vraiment unique au monde
-    cam_key = f"camera_step_{st.session_state.step}_{id_in[:5]}"
+      # 1. On crée une clé unique basée sur l'étape 
+    # (On n'utilise plus id_in ici pour éviter l'erreur NameError)
+    cam_key = f"cam_v2_step_{st.session_state.step}"
     
+    # 2. La caméra avec sa nouvelle clé
     photo = st.camera_input("Cliquez sur le cercle pour capturer", key=cam_key)
+
 
     
     # Stockage temporaire de la photo pour le bouton du haut
