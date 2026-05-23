@@ -10,41 +10,44 @@ from fpdf import FPDF
 if 'auth' not in st.session_state:
     st.session_state.auth = False
 
-# --- SYSTÈME DE SÉCURITÉ ET ACCUEIL INSTITUTIONNEL ---
+# --- SYSTÈME DE SÉCURITÉ INSTITUTIONNEL ENSV ALGER ---
 if 'auth' not in st.session_state:
     st.session_state.auth = False
 
 def login():
-    # Mise en page centrée pour le logo et le titre
-    col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
+    # Centrage visuel
+    c1, c2, c3 = st.columns([1, 2, 1])
     
-    with col_l2:
-        st.image("https://flaticon.com", width=120) # Icône institutionnelle
+    with c2:
+        # Utilisation d'un logo vétérinaire officiel ou celui de l'ENSV si vous avez le lien
+        # À défaut, j'utilise une icône de santé animale de haute qualité
+        st.image("https://flaticon.com", width=120) 
+        
         st.title("🛡️ OviStat Vision Pro")
-        st.subheader("Système Expert de Morphométrie Ovine")
-        st.write("---")
+        st.subheader("École Nationale Supérieure Vétérinaire d'Alger")
+        st.markdown("---")
         
         st.info("""
-        **📍 Projet de Recherche Zootechnique - Algérie**  
-        Ce logiciel est réservé aux chercheurs et agents de terrain autorisés.  
-        Toute capture de donnée est géolocalisée et sécurisée.
+        **🎓 Cadre : Recherche Zootechnique & Innovation**  
+        Ce système expert d'analyse morphométrique assisté par IA est la propriété intellectuelle de **MERABIA KAWTHER (ENSV)**.
         """)
         
-        # Formulaire de connexion avec style
         with st.container():
-            pwd = st.text_input("Veuillez saisir votre code d'accès confidentiel :", type="password")
-            if st.button("🔑 DÉVERROUILLER L'ACCÈS AU TERRAIN"):
-                if pwd == "Algeria2024": # <--- VOTRE MOT DE PASSE SECRET
+            # Champ de mot de passe
+            pwd = st.text_input("🔑 Code d'accès chercheur :", type="password")
+            
+            if st.button("DÉVERROUILLER L'INTERFACE"):
+                if pwd == "ENSVAlger2026": # <--- VOTRE NOUVEAU MOT DE PASSE
                     st.session_state.auth = True
-                    st.success("✅ Accès accordé. Initialisation de l'IA...")
+                    st.success("Accès autorisé. Bienvenue, Docteur.")
                     st.rerun()
                 else:
-                    st.error("❌ Code d'accès invalide. Échec de l'authentification.")
+                    st.error("Accès refusé. Identifiants incorrects.")
         
-        st.write("---")
-        st.caption("© 2024 MERABIA KAWTHER - Tous droits réservés.")
+        st.markdown("---")
+        st.caption("📍 El Alia, Alger - Laboratoire de Zootechnie")
 
-    st.stop() # Bloque l'application tant que l'accès n'est pas validé
+    st.stop() # Bloque l'application
 
 if not st.session_state.auth:
     login()
