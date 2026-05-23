@@ -181,53 +181,48 @@ with tabs[0]:
         st.warning(f"⚠️ Aucune commune trouvée pour {w_clean}")
 
     st.divider()
-       # --- ZONE DE SCAN MOBILE OPTIMISÉE ---
+        # --- ZONE DE SCAN MOBILE OPTIMISÉE ---
     st.write(f"### 📸 Étape {st.session_state.step}/3")
-       # 2. LA CAMÉRA (Placée au centre)
-    photo = st.camera_input("Cliquez sur le cercle pour capturer", key=f"cam_step_{st.session_state.step}")
     
-    # --- LOGIQUE IA : DÉTECTION ET COMPTAGE ---
-    ia_hg, ia_tp = 0.0, 0.0 # Valeurs par défaut
-    
-    if photo:
-        st.session_state.last_photo = photo
-        img = Image.open(photo)
-        results = model(img) # Appel du modèle YOLO
-        
-        # Comptage des moutons (Classe 18 dans YOLO)
-        nb_moutons = sum(1 for r in results for box in r.boxes if int(box.cls) == 18)
-        
-        if nb_moutons == 0:
-            st.error("❌ Aucun ovin détecté sur la photo. Réessayez.")
-        elif nb_moutons > 1:
-            st.warning(f"⚠️ {nb_moutons} moutons vus ! Isolez UN SEUL animal pour la précision scientifique.")
-        else:
-            st.success("✅ Animal unique détecté. Analyse en cours...")
-            # Ici l'IA génère les suggestions
-            ia_hg, ia_tp = 68.5, 84.0 
     # 1. LE BOUTON DE VALIDATION (Placé en haut pour ne pas disparaître)
     if st.session_state.step <= 3:
-        if st.button(f"✅ ÉTAPE SUIVANTE : VALIDER LA PHOTO {st.session_state.step}", type="primary", use_container_width=True):
-            # On vérifie si une photo existe déjà dans la mémoire
+        btn_label = f"✅ ÉTAPE SUIVANTE : VALIDER LA PHOTO {st.session_state.step}"
+        if st.button(btn_label, type="primary", use_container_width=True):
+            # On vérifie si une photo a été prise et stockée dans le session_state
             if 'last_photo' in st.session_state and st.session_state.last_photo is not None:
                 if st.session_state.step < 3:
                     st.session_state.step += 1
                     st.session_state.last_photo = None # Reset pour l'étape suivante
                     st.rerun()
                 else:
-                    st.success("🎯 Scan IA complet !")
+                    st.success("🎯 Scan IA complet ! Vérifiez les mesures ci-dessous.")
             else:
-                st.error("⚠️ Prenez d'abord la photo ci-dessous avant de valider.")
+                st.error("⚠️ Prenez d'abord la photo ci-dessous (cliquez sur le cercle) avant de valider.")
 
-       # 2. LA CAMÉRA (Clé unique basée sur l'étape et l'ID animal pour éviter le doublon)
-    # On ajoute id_in dans la clé pour qu'elle soit vraiment unique au monde
-      # 1. On crée une clé unique basée sur l'étape 
-    # (On n'utilise plus id_in ici pour éviter l'erreur NameError)
+    # 2. LA CAMÉRA UNIQUE (Une seule ligne camera_input ici)
     cam_key = f"cam_v2_step_{st.session_state.step}"
-    
-    # 2. La caméra avec sa nouvelle clé
     photo = st.camera_input("Cliquez sur le cercle pour capturer", key=cam_key)
-
+    
+    # --- LOGIQUE IA : DÉTECTION ET COMPTAGE ---
+    ia_hg, ia_tp = 0.0, 0.0 # Valeurs par défaut
+    
+    if photo:
+        st.session_state.last_photo = photo # Stockage pour le bouton du haut
+        img = Image.open(photo)
+        results = model(img) 
+        
+        # Comptage des moutons (Classe 18)
+        nb_moutons = sum(1 for r in results for box in r.boxes if int(box.cls) == 18)
+        
+        if nb_moutons == 0:
+            st.error("❌ Aucun ovin détecté. Réessayez.")
+            st.session_state.last_photo = None # Invalide la capture
+        elif nb_moutons > 1:
+            st.warning(f"⚠️ {nb_moutons} moutons détectés ! Isolez UN SEUL animal.")
+            st.session_state.last_photo = None # Invalide la capture
+        else:
+            st.success("✅ Animal unique détecté. Analyse en cours...")
+            ia_hg, ia_tp = 68.5, 84.0 # Suggestions IA
 
     
     # Stockage temporaire de la photo pour le bouton du haut
