@@ -181,12 +181,29 @@ with tabs[0]:
         st.warning(f"⚠️ Aucune commune trouvée pour {w_clean}")
 
     st.divider()
-
-    # Début du cycle de scan
+# --- PARTIE SCAN (HORS FORMULAIRE POUR ÉVITER LE BLOCAGE) ---
     if 'step' not in st.session_state: st.session_state.step = 1
     
-    # FORMULAIRE (Indentation de 4 espaces par rapport au bord gauche)
-    with st.form("form_global", clear_on_submit=False):
+    st.write(f"📸 **Étape {st.session_state.step}/3 :** " + ["Profil", "Dessus", "Tête"][st.session_state.step-1])
+    
+    # La caméra envoie l'image dès la prise
+    photo = st.camera_input("Capturer l'angle", key=f"cam_active_{st.session_state.step}")
+
+    # Le bouton de validation est toujours visible pour passer à la suite
+    if st.button(f"✅ VALIDER L'ÉTAPE {st.session_state.step}", use_container_width=True):
+        if photo:
+            if st.session_state.step < 3:
+                st.session_state.step += 1
+                st.rerun()
+            else:
+                st.success("🎯 Scan IA complet ! Veuillez valider les mensurations en bas.")
+        else:
+            st.warning("⚠️ Prenez une photo avant de valider.")
+
+    st.divider()
+
+    # --- PARTIE FORMULAIRE (POUR LES DONNÉES ET L'ENREGISTREMENT) ---
+    with st.form("form_global_final", clear_on_submit=False):
         st.subheader("🆔 Identification & Mensurations")
         
         c1, c2, c3 = st.columns(3)
@@ -194,20 +211,8 @@ with tabs[0]:
         age_in = c2.number_input("Âge (mois)", value=12)
         race_in = c3.selectbox("Race", ["Ouled Djellal", "Rembi", "Hamra", "Taadmit"])
 
-        st.write(f"📸 **Scan Étape {st.session_state.step}/3**")
-        photo = st.camera_input("Capturer", key=f"cam_{st.session_state.step}")
-        
-        ia_hg, ia_tp = 0.0, 0.0
-        if photo:
-            if st.session_state.step < 3:
-                if st.form_submit_button(f"➡️ Valider l'étape {st.session_state.step}"):
-                    st.session_state.step += 1
-                    st.rerun()
-            else:
-                st.success("✅ Photos prêtes !")
-                ia_hg, ia_tp = 68.5, 84.0
+        ia_hg, ia_tp = (68.5, 84.0) if st.session_state.step == 3 else (0.0, 0.0)
 
-        st.divider()
         
         # Expanders
         with st.expander("1️⃣ Dimensions Corporelles", expanded=True):
