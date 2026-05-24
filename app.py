@@ -79,29 +79,31 @@ else:
 
 st.markdown("""
     <style>
-    /* 1. Agrandit le cadre de la caméra sur l'écran */
+    /* 1. On définit un conteneur solide pour la caméra */
+    div[data-testid="stCameraInput"] {
+        border: 4px solid #1f77b4 !important; /* Le cadre bleu revient ici */
+        border-radius: 20px !important;
+        overflow: hidden !important;
+        background-color: black;
+        margin-top: 10px;
+    }
+
+    /* 2. On force la vidéo à être grande et nette */
     div[data-testid="stCameraInput"] video {
         width: 100% !important;
-        height: auto !important;
-        min-height: 500px; /* Augmente la taille verticale pour mieux voir */
-        border-radius: 15px;
-        border: 4px solid #1f77b4;
-        
-        /* 2. EFFET ZOOM : 
-           Le chiffre 1.2 agrandit l'image de 20%. 
-           Augmentez à 1.5 si vous voulez zoomer plus fort. */
-        transform: scale(1.2); 
-        transform-origin: center;
-        object-fit: cover !important;
+        height: 500px !important; /* Hauteur fixe pour bien voir le mouton */
+        object-fit: cover !important; /* Remplit le cadre sans bandes noires */
     }
-    
-    /* Empêche le zoom de déborder sur les autres éléments */
-    div[data-testid="stCameraInput"] {
-        overflow: hidden;
-        border-radius: 15px;
+
+    /* 3. On agrandit le bouton de capture pour le pouce */
+    div[data-testid="stCameraInput"] button {
+        height: 60px !important;
+        font-size: 18px !important;
+        background-color: #1f77b4 !important;
     }
     </style>
     """, unsafe_allow_html=True)
+
 
 
 
