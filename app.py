@@ -77,22 +77,32 @@ else:
     bg_c, card_c, text_c, border_c = "#f8f9fa", "#ffffff", "#1f77b4", "#dee2e6"
     metric_bg = "#ffffff"
 
-st.markdown(f"""
+st.markdown("""
     <style>
-    .stApp {{ background-color: {bg_c}; color: {text_c}; }}
-    /* Onglets Modernes */
-    .stTabs [data-baseweb="tab-list"] {{ gap: 8px; background-color: {card_c}; padding: 10px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }}
-    .stTabs [data-baseweb="tab"] {{ height: 50px; border-radius: 10px; background-color: {bg_c}; color: {text_c}; border: none; }}
-    /* Boutons Géants Terrain */
-    .stButton>button {{ width: 100%; height: 55px; border-radius: 12px; font-weight: bold; background: linear-gradient(135deg, #1f77b4 0%, #125688 100%); color: white; border: none; box-shadow: 0 4px 15px rgba(31,119,180,0.3); }}
-    /* Métriques & Cards */
-    [data-testid="stMetric"] {{ background-color: {metric_bg} !important; padding: 15px; border-radius: 15px; border-left: 5px solid #1f77b4 !important; border: 1px solid {border_c}; }}
-    /* Caméra */
-    div[data-testid="stCameraInput"] video {{ border: 4px solid #1f77b4; border-radius: 20px; object-fit: cover !important; }}
-    /* Expanders */
-    .streamlit-expanderHeader {{ background-color: {card_c} !important; color: #1f77b4 !important; border-radius: 10px !important; }}
+    /* 1. Agrandit le cadre de la caméra sur l'écran */
+    div[data-testid="stCameraInput"] video {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 500px; /* Augmente la taille verticale pour mieux voir */
+        border-radius: 15px;
+        border: 4px solid #1f77b4;
+        
+        /* 2. EFFET ZOOM : 
+           Le chiffre 1.2 agrandit l'image de 20%. 
+           Augmentez à 1.5 si vous voulez zoomer plus fort. */
+        transform: scale(1.2); 
+        transform-origin: center;
+        object-fit: cover !important;
+    }
+    
+    /* Empêche le zoom de déborder sur les autres éléments */
+    div[data-testid="stCameraInput"] {
+        overflow: hidden;
+        border-radius: 15px;
+    }
     </style>
     """, unsafe_allow_html=True)
+
 
 
 DB_FILE = "data_ovinstat_V16.csv"
