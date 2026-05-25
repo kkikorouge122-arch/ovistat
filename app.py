@@ -173,9 +173,16 @@ st.title("🐑 OviStat IA v2.1")
 tabs = st.tabs(["📥 Saisie", "🔍 Historique & Modif", "📊 Analyse", "🩺 Santé", "ℹ️ À Propos"])
 
 # --- ONGLET 1 : SAISIE ---
-# --- INITIALISATION DES VARIABLES DANS LA MÉMOIRE (Session State) ---
+# Initialisation de la mémoire IA avec TOUTES les clés nécessaires
 if 'mesures_ia' not in st.session_state:
-    st.session_state.mesures_ia = {col: 0.0 for col in COLONNES}
+    # On crée un dictionnaire avec des noms simplifiés pour éviter les erreurs
+    st.session_state.mesures_ia = {
+        "HG": 0.0, "HS": 0.0, "LB": 0.0, "LT_tronc": 0.0, "LC_cou": 0.0, "LH": 0.0,
+        "TP": 0.0, "LI": 0.0, "LP": 0.0, "PP": 0.0,
+        "Lc_cornes": 0.0, "LTete": 0.0, "LtTete": 0.0, "LO": 0.0, "Lo": 0.0, "TC": 0.0,
+        "LY": 0.0, "TS": 0.0, "PS": 0.0, "LG": 0.0, "LL": 0.0
+    }
+
 # --- ONGLET 1 : SCAN PROGRESSIF ---
 with tabs[0]:
     st.subheader("📍 Localisation de l'étude")
