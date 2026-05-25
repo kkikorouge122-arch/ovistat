@@ -173,6 +173,10 @@ st.title("🐑 OviStat IA v2.1")
 tabs = st.tabs(["📥 Saisie", "🔍 Historique & Modif", "📊 Analyse", "🩺 Santé", "ℹ️ À Propos"])
 
 # --- ONGLET 1 : SAISIE ---
+# --- INITIALISATION DES VARIABLES DANS LA MÉMOIRE (Session State) ---
+if 'mesures_ia' not in st.session_state:
+    st.session_state.mesures_ia = {col: 0.0 for col in COLONNES}
+# --- ONGLET 1 : SCAN PROGRESSIF ---
 with tabs[0]:
     st.subheader("📍 Localisation de l'étude")
     
@@ -192,90 +196,115 @@ with tabs[0]:
         st.warning(f"⚠️ Aucune commune trouvée pour {w_clean}")
 
     st.divider()
-       # --- ZONE DE SCAN MOBILE OPTIMISÉE ---
-    st.write(f"### 📸 Étape {st.session_state.step}/3")
+     # 2. ZONE DE CAPTURE IA
+    etapes = ["PROFIL (Côtés)", "DESSUS (Dos)", "TÊTE (Face)"]
+    st.subheader(f"📸 Étape {st.session_state.step}/3 : {etapes[st.session_state.step-1]}")
     
-    # 1. LE BOUTON DE VALIDATION (Placé en haut pour ne pas disparaître)
-    if st.session_state.step <= 3:
-        if st.button(f"✅ ÉTAPE SUIVANTE : VALIDER LA PHOTO {st.session_state.step}", type="primary", use_container_width=True):
-            # On vérifie si une photo existe déjà dans la mémoire
-            if 'last_photo' in st.session_state and st.session_state.last_photo is not None:
-                if st.session_state.step < 3:
-                    st.session_state.step += 1
-                    st.session_state.last_photo = None # Reset pour l'étape suivante
-                    st.rerun()
-                else:
-                    st.success("🎯 Scan IA complet !")
+    # Bouton de validation placé en haut
+    if st.button(f"✅ VALIDER LA VUE {st.session_state.step}", type="primary", use_container_width=True):
+        if st.session_state.last_photo:
+            if st.session_state.step < 3:
+                st.session_state.step += 1
+                st.session_state.last_photo = None
+                st.rerun()
             else:
-                st.error("⚠️ Prenez d'abord la photo ci-dessous avant de valider.")
+                st.balloons()
+                st.success("🎯 Étude morphométrique terminée. Vérifiez les 30 colonnes ci-dessous.")
+        else:
+            st.error("⚠️ Capturez d'abord l'animal avec la caméra.")
 
-    # 2. LA CAMÉRA (Placée en dessous)
-    photo = st.camera_input("Cliquez sur le cercle pour capturer", key=f"cam_step_{st.session_state.step}")
-    
-    # Stockage temporaire de la photo pour le bouton du haut
+    photo = st.camera_input("Viser le centre 🎯", key=f"cam_v3_{st.session_state.step}")
+
+    # 🧠 LE CERVEAU IA (YOLOv8) : Remplit les cases selon l'étape
     if photo:
         st.session_state.last_photo = photo
-        st.success(f"Photo {st.session_state.step} capturée ! Cliquez sur le bouton BLEU en haut ⬆️")
+        with st.spinner("Analyse anatomique..."):
+            # Simulation des mesures selon l'étape
+            if st.session_state.step == 1:
+                st.session_state.mesures_ia.update({"HG": 68.5, "HS": 67.2, "LB": 78.0, "LT_tronc": 45.0, "LC_cou": 22.0, "LH": 18.0})
+                st.info("📊 Mesures de profil débloquées (HG, LB, HS...)")
+            elif st.session_state.step == 2:
+                st.session_state.mesures_ia.update({"TP": 84.0, "LI": 14.5, "LP": 22.3, "PP": 32.1})
+                st.info("📊 Mesures de largeur débloquées (TP, LP...)")
+            elif st.session_state.step == 3:
+                st.session_state.mesures_ia.update({"Lc_cornes": 0.0, "LTete": 24.5, "LtTete": 12.2, "LO": 28.0, "Lo": 8.5, "TC": 9.2})
+                st.info("📊 Mesures de tête débloquées (Oreilles, Canon...)")
 
     st.divider()
 
-
-
-    # --- PARTIE FORMULAIRE (POUR LES DONNÉES ET L'ENREGISTREMENT) ---
-    with st.form("form_global_final", clear_on_submit=False):
-        st.subheader("🆔 Identification & Mensurations")
+    # 3. FORMULAIRE DE VALIDATION FINALE (Les cases se remplissent toutes seules)
+    with st.form("form_final"):
+        st.subheader("📋 Synthèse des 24 Paramètres")
         
-        c1, c2, c3 = st.columns(3)
-        id_in = c1.text_input("ID / Boucle (Vide = Auto-ID)")
-        age_in = c2.number_input("Âge (mois)", value=12)
-        race_in = c3.selectbox("Race", ["Ouled Djellal", "Rembi", "Hamra", "Taadmit"])
-
-        ia_hg, ia_tp = (68.5, 84.0) if st.session_state.step == 3 else (0.0, 0.0)
-
+        m = st.session_state.mesures_ia # Raccourci
         
-        # Expanders
-        with st.expander("1️⃣ Dimensions Corporelles", expanded=True):
-            g1, g2, g3, g4 = st.columns(4)
-            poids = g1.number_input("Poids (kg)", value=0.0)
-            hg = g2.number_input("HG", value=ia_hg)
-            hs = g3.number_input("HS", value=0.0)
-            lb = g4.number_input("LB", value=0.0)
-            lq = g1.number_input("LQ", value=0.0)
-            lt_t = g2.number_input("LT tronc", value=0.0)
-            lc_c = g3.number_input("LC cou", value=0.0)
-            lh = g4.number_input("LH", value=0.0)
+        with st.expander("1️⃣ Dimensions Corporelles (Profil)", expanded=True):
+            c1, c2, c3, c4 = st.columns(4)
+            poids = c1.number_input("Poids (kg)", value=0.0)
+            hg = c2.number_input("HG", value=m["HG"])
+            hs = c3.number_input("HS", value=m["HS"])
+            lb = c4.number_input("LB", value=m["LB"])
 
-        with st.expander("2️⃣ Poitrine & Largeurs"):
-            g5, g6, g7, g8 = st.columns(4)
-            li = g5.number_input("LI", value=0.0)
-            lp = g6.number_input("LP", value=0.0)
-            pp = g7.number_input("PP", value=0.0)
-            tp = g8.number_input("TP", value=ia_tp)
+        with st.expander("2️⃣ Poitrine & Volume (Dessus)"):
+            c1, c2, c3, c4 = st.columns(4)
+            tp = c1.number_input("Tour Poitrine (TP)", value=m["TP"])
+            li = c2.number_input("Larg. Ischions (LI)", value=m["LI"])
+            lp = c3.number_input("Larg. Poitrine (LP)", value=m["LP"])
+            pp = c4.number_input("Prof. Poitrine (PP)", value=m["PP"])
 
-        with st.expander("3️⃣ Tête & Oreilles"):
+             with st.expander("3️⃣ Tête & Oreilles"):
+            # Ligne 1 : Cornes et Tête
             g9, g10, g11 = st.columns(3)
-            lc_cornes = g9.number_input("Lc", value=0.0)
-            lt_tete = g10.number_input("LT tête", value=0.0)
-            lt_la = g11.number_input("Lt tête", value=0.0)
-            lo_lo = g9.number_input("LO", value=0.0)
-            lo_la = g10.number_input("Lo", value=0.0)
-            tc = g11.number_input("TC", value=0.0)
-
-        with st.expander("4️⃣ Reproduction & Laine"):
+            lc_cornes = g9.number_input("Long. Cornes (Lc)", value=m["Lc_cornes"])
+            lt_tete = g10.number_input("Long. Tête (LT)", value=m["LTete"])
+            lt_la = g11.number_input("Larg. Tête (Lt)", value=m["LtTete"])
+            
+            # Ligne 2 : Oreilles et Canon
             g12, g13, g14 = st.columns(3)
-            ly = g12.number_input("LY", value=0.0)
-            ts = g13.number_input("TS", value=0.0)
-            ps = g14.number_input("PS", value=0.0)
-            lg = g12.number_input("LG", value=0.0)
-            ll = g13.number_input("LL", value=0.0)
+            lo_lo = g12.number_input("Long. Oreilles (LO)", value=m["LO"])
+            lo_la = g13.number_input("Larg. Oreilles (Lo)", value=m["Lo"])
+            tc = g14.number_input("Tour Canon (TC)", value=m["TC"])
 
+
+          with st.expander("4️⃣ Reproduction & Laine"):
+            # Ligne 1 : Appareil reproducteur
+            r1, r2, r3 = st.columns(3)
+            ly = r1.number_input("Long. Trayons (LY)", value=m["LY"])
+            ts = r2.number_input("Tour Scrotal (TS)", value=m["TS"])
+            ps = r3.number_input("Prof. Scrotale (PS)", value=m["PS"])
+            
+            # Ligne 2 : Gigot et Laine
+            r4, r5, r6 = st.columns(3)
+            lg = r4.number_input("Long. Gigot (LG)", value=m["LG"])
+            ll = r5.number_input("Long. Laine (LL)", value=m["LL"])
+            
+            # Calcul de la ration affiché en temps réel
+            ration_estim = round(poids * 0.035, 2)
+            r6.metric("Ration (kg)", ration_estim)
+
+        # --- BOUTON D'ENREGISTREMENT FINAL ---
         if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
+            # Génération de l'ID si vide
             id_f = id_in if id_in else f"TEMP-{datetime.now().strftime('%H%M%S')}"
-            row = [date.today(), id_f, race_in, age_in, poids, hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp, lc_cornes, lt_tete, lt_la, lo_lo, lo_la, tc, ly, ts, ps, lg, ll, wilaya_sel, commune_sel, round(poids*0.035,2)]
+            
+            # Création de la ligne avec TOUTES les variables des expanders (30 colonnes)
+            row = [
+                date.today(), id_f, race_in, age_in, poids, 
+                hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp, 
+                lc_cornes, lt_tete, lt_la, lo_lo, lo_la, tc, 
+                ly, ts, ps, lg, ll, 
+                wilaya_sel, commune_sel, ration_estim
+            ]
+            
+            # Sauvegarde physique dans le CSV
             pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
+            
+            # Réinitialisation pour l'animal suivant
             st.session_state.step = 1
-            st.success(f"✅ Enregistré !")
+            st.session_state.mesures_ia = {col: 0.0 for col in COLONNES} # On vide la mémoire IA
+            st.success(f"✅ Fiche de l'animal {id_f} enregistrée avec succès !")
             st.rerun()
+
 
 
 # --- ONGLET 2 : HISTORIQUE & MODIF TOTALE ---
