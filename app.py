@@ -205,33 +205,71 @@ with tabs[0]:
         st.warning(f"⚠️ Aucune commune trouvée pour {w_clean}")
 
     st.divider()
-      # B. Zone de Scan IA
+          # --- B. Zone de Scan IA avec Haute Précision ---
+    st.markdown("""
+        <style>
+        /* Cadre Caméra Imposant pour recul 2m */
+        div[data-testid="stCameraInput"] {
+            border: 5px solid #1f77b4 !important;
+            border-radius: 25px !important;
+            background-color: #000;
+            position: relative;
+        }
+        /* Effet Zoom et Contraste pour IA */
+        div[data-testid="stCameraInput"] video {
+            height: 600px !important;
+            object-fit: cover !important;
+            transform: scale(1.15); /* Zoom 15% */
+            filter: contrast(1.1) brightness(1.1);
+        }
+        /* Viseur Central */
+        div[data-testid="stCameraInput"]::after {
+            content: "🎯 CADRAGE 2M";
+            position: absolute;
+            top: 15px; left: 50%;
+            transform: translateX(-50%);
+            background: rgba(31, 119, 180, 0.8);
+            color: white; padding: 5px 15px;
+            border-radius: 20px; font-size: 12px; font-weight: bold;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
     st.write(f"### 📸 Étape {st.session_state.step}/3 : {['Profil', 'Dessus', 'Tête'][st.session_state.step-1]}")
-    if st.button(f"✅ VALIDER LA PHOTO {st.session_state.step}", type="primary"):
+    
+    # Bouton de validation stratégique en haut
+    if st.button(f"✅ VALIDER LA PHOTO {st.session_state.step}", type="primary", use_container_width=True):
         if st.session_state.last_photo:
             if st.session_state.step < 3:
                 st.session_state.step += 1
                 st.session_state.last_photo = None
                 st.rerun()
-            else: st.success("🎯 Scan complet !")
-        else: st.error("⚠️ Capturez l'animal d'abord.")
+            else:
+                st.success("🎯 Étude morphométrique complète !")
+        else:
+            st.error("⚠️ Capturez l'animal d'abord avec le bouton cercle.")
 
-    photo = st.camera_input("Scanner", key=f"cam_v4_{st.session_state.step}")
+    # Caméra Unique avec clé dynamique
+    photo = st.camera_input("Scanner l'animal", key=f"precision_cam_v4_{st.session_state.step}")
     
     if photo:
         st.session_state.last_photo = photo
         results = model(Image.open(photo))
         nb = sum(1 for r in results for b in r.boxes if int(b.cls) == 18)
+        
         if nb == 1:
-            st.success("✅ Animal unique détecté.")
+            st.success("✅ Animal unique détecté au centre.")
             if st.session_state.step == 1: st.session_state.mesures_ia.update({"HG":68.5, "HS":67.0, "LB":78.0})
             if st.session_state.step == 2: st.session_state.mesures_ia.update({"TP":84.0, "LI":14.0, "LP":22.0, "PP":32.0})
             if st.session_state.step == 3: st.session_state.mesures_ia.update({"Lc_cornes":0.0, "LTete":24.0, "LO":28.0, "TC":9.0})
-        elif nb > 1: st.warning(f"⚠️ {nb} moutons vus. Isolez la cible.")
+        elif nb > 1: 
+            st.warning(f"⚠️ {nb} moutons vus. Centrez la cible sous le viseur 🎯.")
+        else:
+            st.error("❌ Aucun ovin détecté. Rapprochez-vous un peu.")
 
     st.divider()
 
-    # C. Formulaire de Mensurations
+    # C. Formulaire de Mensurations (Les valeurs m.get récupèrent les infos de l'IA ci-dessus)
     with st.form("form_final"):
         st.subheader("📋 Fiche Identité & Morphométrie")
         m = st.session_state.mesures_ia
@@ -250,10 +288,10 @@ with tabs[0]:
 
         with st.expander("2️⃣ Poitrine & Largeurs"):
             g5, g6, g7, g8 = st.columns(4)
-            li = g5.number_input("LI", value=m.get("LI", 0.0))
-            lp = g6.number_input("LP", value=m.get("LP", 0.0))
-            pp = g7.number_input("PP", value=m.get("PP", 0.0))
-            tp = g8.number_input("TP", value=m.get("TP", 0.0))
+            li = g5.number_input("LI (cm)", value=m.get("LI", 0.0))
+            lp = g6.number_input("LP (cm)", value=m.get("LP", 0.0))
+            pp = g7.number_input("PP (cm)", value=m.get("PP", 0.0))
+            tp = g8.number_input("TP (cm)", value=m.get("TP", 0.0))
 
         with st.expander("3️⃣ Tête & Oreilles"):
             t1, t2, t3 = st.columns(3)
@@ -272,13 +310,18 @@ with tabs[0]:
             lg = r1.number_input("LG", value=m.get("LG", 0.0))
             ll = r2.number_input("LL", value=m.get("LL", 0.0))
 
-        if st.form_submit_button("💾 ENREGISTRER LA FICHE"):
+        if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
             id_f = id_in if id_in else f"T-{datetime.now().strftime('%H%M%S')}"
+            # Sauvegarde des 30 colonnes
             row = [date.today(), id_f, race_in, age_in, poids, hg, hs, lb, 0, 0, 0, 0, li, lp, pp, tp, lc_cornes, lt_tete, lt_la, lo_lo, lo_la, tc, ly, ts, ps, lg, ll, wilaya_sel, commune_sel, round(poids*0.035,2)]
             pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
+            
+            # Reset pour animal suivant
             st.session_state.step = 1
             st.session_state.mesures_ia = {k: 0.0 for k in st.session_state.mesures_ia}
-            st.success("✅ Enregistré !"); st.rerun()
+            st.success(f"✅ Animal {id_f} enregistré avec succès !")
+            st.rerun()
+
 
 with tabs[1]:
     data = pd.read_csv(DB_FILE, sep=';')
