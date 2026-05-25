@@ -26,7 +26,7 @@ def login():
         st.title("🛡️ Accès Sécurisé ENSV")
         pwd = st.text_input("🔑 Code d'accès chercheur :", type="password")
         if st.button("DÉVERROUILLER"):
-            if pwd == "ENSV-2024":
+            if pwd == "ENSVAlger2026":
                 st.session_state.auth = True
                 st.rerun()
             else: st.error("Code incorrect")
