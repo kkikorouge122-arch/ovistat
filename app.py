@@ -60,27 +60,48 @@ else:
 
 st.markdown("""
     <style>
-    /* 1. On définit un conteneur solide pour la caméra */
+    /* 1. Grand écran pour la visée à distance */
     div[data-testid="stCameraInput"] {
-        border: 4px solid #1f77b4 !important; /* Le cadre bleu revient ici */
-        border-radius: 20px !important;
-        overflow: hidden !important;
-        background-color: black;
-        margin-top: 10px;
+        border: 5px solid #1f77b4 !important;
+        border-radius: 25px !important;
+        background-color: #000;
+        max-width: 800px;
+        margin: auto;
+        position: relative;
     }
 
-    /* 2. On force la vidéo à être grande et nette */
+    /* 2. Optimisation de la vidéo (Zoom Logiciel 1.2x) */
     div[data-testid="stCameraInput"] video {
         width: 100% !important;
-        height: 500px !important; /* Hauteur fixe pour bien voir le mouton */
-        object-fit: cover !important; /* Remplit le cadre sans bandes noires */
+        height: 600px !important; /* Hauteur augmentée pour le recul */
+        object-fit: cover !important;
+        transform: scale(1.1); /* Petit zoom pour compenser la distance de 2m */
+        filter: contrast(1.1) brightness(1.1); /* Améliore la détection des bords pour l'IA */
     }
 
-    /* 3. On agrandit le bouton de capture pour le pouce */
+    /* 3. Guide visuel de centrage (Le Viseur) */
+    div[data-testid="stCameraInput"]::after {
+        content: "📐 CADRAGE 2 MÈTRES";
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: rgba(31, 119, 180, 0.7);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    /* 4. Bouton de capture géant pour éviter de bouger en cliquant */
     div[data-testid="stCameraInput"] button {
-        height: 60px !important;
-        font-size: 18px !important;
+        height: 80px !important;
+        width: 80px !important;
+        border-radius: 50% !important;
+        border: 4px solid white !important;
         background-color: #1f77b4 !important;
+        bottom: 20px;
     }
     </style>
     """, unsafe_allow_html=True)
