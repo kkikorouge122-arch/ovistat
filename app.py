@@ -6,52 +6,33 @@ from datetime import datetime, date
 from ultralytics import YOLO
 from PIL import Image
 from fpdf import FPDF
-# --- SYSTÈME DE SÉCURITÉ ET LOGIN ---
-if 'auth' not in st.session_state:
-    st.session_state.auth = False
+# --- 1. CONFIGURATION & SÉCURITÉ ---
+st.set_page_config(page_title="OviStat Vision Pro v2.4", page_icon="🐑", layout="wide")
 
-# --- SYSTÈME DE SÉCURITÉ INSTITUTIONNEL ENSV ALGER ---
-if 'auth' not in st.session_state:
-    st.session_state.auth = False
+if 'auth' not in st.session_state: st.session_state.auth = False
+if 'step' not in st.session_state: st.session_state.step = 1
+if 'last_photo' not in st.session_state: st.session_state.last_photo = None
+if 'mesures_ia' not in st.session_state:
+    st.session_state.mesures_ia = {
+        "HG": 0.0, "HS": 0.0, "LB": 0.0, "TP": 0.0, "LI": 0.0, "LP": 0.0, "PP": 0.0,
+        "Lc_cornes": 0.0, "LTete": 0.0, "LtTete": 0.0, "LO": 0.0, "Lo": 0.0, "TC": 0.0,
+        "LY": 0.0, "TS": 0.0, "PS": 0.0, "LG": 0.0, "LL": 0.0
+    }
 
 def login():
-    # Centrage visuel
     c1, c2, c3 = st.columns([1, 2, 1])
-    
     with c2:
-        # Utilisation d'un logo vétérinaire officiel ou celui de l'ENSV si vous avez le lien
-        # À défaut, j'utilise une icône de santé animale de haute qualité
-        st.image("https://flaticon.com", width=120) 
-        
-        st.title("🛡️ OviStat Vision Pro")
-        st.subheader("École Nationale Supérieure Vétérinaire d'Alger")
-        st.markdown("---")
-        
-        st.info("""
-        **🎓 Cadre : Recherche Zootechnique & Innovation**  
-        Ce système expert d'analyse morphométrique assisté par IA est la propriété intellectuelle de **MERABIA KAWTHER (ENSV)**.
-        """)
-        
-        with st.container():
-            # Champ de mot de passe
-            pwd = st.text_input("🔑 Code d'accès chercheur :", type="password")
-            
-            if st.button("DÉVERROUILLER L'INTERFACE"):
-                if pwd == "ENSVAlger2026": # <--- VOTRE NOUVEAU MOT DE PASSE
-                    st.session_state.auth = True
-                    st.success("Accès autorisé. Bienvenue, Docteur.")
-                    st.rerun()
-                else:
-                    st.error("Accès refusé. Identifiants incorrects.")
-        
-        st.markdown("---")
-        st.caption("📍 El Alia, Alger - Laboratoire de Zootechnie")
+        st.image("https://flaticon.com", width=100)
+        st.title("🛡️ Accès Sécurisé ENSV")
+        pwd = st.text_input("🔑 Code d'accès chercheur :", type="password")
+        if st.button("DÉVERROUILLER"):
+            if pwd == "ENSV-2024":
+                st.session_state.auth = True
+                st.rerun()
+            else: st.error("Code incorrect")
+    st.stop()
 
-    st.stop() # Bloque l'application
-
-if not st.session_state.auth:
-    login()
-
+if not st.session_state.auth: login()
 
 # --- 1. GESTION DU MODE NUIT (SESSION STATE) ---
 if 'dark_mode' not in st.session_state:
@@ -203,105 +184,93 @@ with tabs[0]:
         st.warning(f"⚠️ Aucune commune trouvée pour {w_clean}")
 
     st.divider()
-     # 2. ZONE DE CAPTURE IA
-    etapes = ["PROFIL (Côtés)", "DESSUS (Dos)", "TÊTE (Face)"]
-    st.subheader(f"📸 Étape {st.session_state.step}/3 : {etapes[st.session_state.step-1]}")
-    
-    # Bouton de validation placé en haut
-    if st.button(f"✅ VALIDER LA VUE {st.session_state.step}", type="primary", use_container_width=True):
+      # B. Zone de Scan IA
+    st.write(f"### 📸 Étape {st.session_state.step}/3 : {['Profil', 'Dessus', 'Tête'][st.session_state.step-1]}")
+    if st.button(f"✅ VALIDER LA PHOTO {st.session_state.step}", type="primary"):
         if st.session_state.last_photo:
             if st.session_state.step < 3:
                 st.session_state.step += 1
                 st.session_state.last_photo = None
                 st.rerun()
-            else:
-                st.balloons()
-                st.success("🎯 Étude morphométrique terminée. Vérifiez les 30 colonnes ci-dessous.")
-        else:
-            st.error("⚠️ Capturez d'abord l'animal avec la caméra.")
+            else: st.success("🎯 Scan complet !")
+        else: st.error("⚠️ Capturez l'animal d'abord.")
 
-    photo = st.camera_input("Viser le centre 🎯", key=f"cam_v3_{st.session_state.step}")
-
-    # 🧠 LE CERVEAU IA (YOLOv8) : Remplit les cases selon l'étape
+    photo = st.camera_input("Scanner", key=f"cam_v4_{st.session_state.step}")
+    
     if photo:
         st.session_state.last_photo = photo
-        with st.spinner("Analyse anatomique..."):
-            # Simulation des mesures selon l'étape
-            if st.session_state.step == 1:
-                st.session_state.mesures_ia.update({"HG": 68.5, "HS": 67.2, "LB": 78.0, "LT_tronc": 45.0, "LC_cou": 22.0, "LH": 18.0})
-                st.info("📊 Mesures de profil débloquées (HG, LB, HS...)")
-            elif st.session_state.step == 2:
-                st.session_state.mesures_ia.update({"TP": 84.0, "LI": 14.5, "LP": 22.3, "PP": 32.1})
-                st.info("📊 Mesures de largeur débloquées (TP, LP...)")
-            elif st.session_state.step == 3:
-                st.session_state.mesures_ia.update({"Lc_cornes": 0.0, "LTete": 24.5, "LtTete": 12.2, "LO": 28.0, "Lo": 8.5, "TC": 9.2})
-                st.info("📊 Mesures de tête débloquées (Oreilles, Canon...)")
+        results = model(Image.open(photo))
+        nb = sum(1 for r in results for b in r.boxes if int(b.cls) == 18)
+        if nb == 1:
+            st.success("✅ Animal unique détecté.")
+            if st.session_state.step == 1: st.session_state.mesures_ia.update({"HG":68.5, "HS":67.0, "LB":78.0})
+            if st.session_state.step == 2: st.session_state.mesures_ia.update({"TP":84.0, "LI":14.0, "LP":22.0, "PP":32.0})
+            if st.session_state.step == 3: st.session_state.mesures_ia.update({"Lc_cornes":0.0, "LTete":24.0, "LO":28.0, "TC":9.0})
+        elif nb > 1: st.warning(f"⚠️ {nb} moutons vus. Isolez la cible.")
 
     st.divider()
 
-    # 3. FORMULAIRE DE VALIDATION FINALE (Les cases se remplissent toutes seules)
+    # C. Formulaire de Mensurations
     with st.form("form_final"):
-        st.subheader("📋 Synthèse des 24 Paramètres")
+        st.subheader("📋 Fiche Identité & Morphométrie")
+        m = st.session_state.mesures_ia
         
-        m = st.session_state.mesures_ia # Raccourci
-        
-        with st.expander("1️⃣ Dimensions Corporelles (Profil)", expanded=True):
-            c1, c2, c3, c4 = st.columns(4)
-            poids = c1.number_input("Poids (kg)", value=0.0)
-            hg = c2.number_input("HG", value=m["HG"])
-            hs = c3.number_input("HS", value=m["HS"])
-            lb = c4.number_input("LB", value=m["LB"])
+        c1, c2, c3 = st.columns(3)
+        id_in = c1.text_input("ID / Boucle")
+        age_in = c2.number_input("Âge (mois)", 0, 120, 12)
+        race_in = c3.selectbox("Race", ["Ouled Djellal", "Rembi", "Hamra"])
 
-        with st.expander("2️⃣ Poitrine & Volume (Dessus)"):
-            c1, c2, c3, c4 = st.columns(4)
-            tp = c1.number_input("Tour Poitrine (TP)", value=m["TP"])
-            li = c2.number_input("Larg. Ischions (LI)", value=m["LI"])
-            lp = c3.number_input("Larg. Poitrine (LP)", value=m["LP"])
-            pp = c4.number_input("Prof. Poitrine (PP)", value=m["PP"])
+        with st.expander("1️⃣ Dimensions Corporelles", expanded=True):
+            g1, g2, g3, g4 = st.columns(4)
+            poids = g1.number_input("Poids (kg)", 0.0, 150.0, 0.0)
+            hg = g2.number_input("HG (cm)", value=m.get("HG", 0.0))
+            hs = g3.number_input("HS (cm)", value=m.get("HS", 0.0))
+            lb = g4.number_input("LB (cm)", value=m.get("LB", 0.0))
 
-                   # --- EXPANDER 3 : TÊTE ---
+        with st.expander("2️⃣ Poitrine & Largeurs"):
+            g5, g6, g7, g8 = st.columns(4)
+            li = g5.number_input("LI", value=m.get("LI", 0.0))
+            lp = g6.number_input("LP", value=m.get("LP", 0.0))
+            pp = g7.number_input("PP", value=m.get("PP", 0.0))
+            tp = g8.number_input("TP", value=m.get("TP", 0.0))
+
         with st.expander("3️⃣ Tête & Oreilles"):
-            g9, g10, g11 = st.columns(3)
-            lc_cornes = g9.number_input("Long. Cornes (Lc)", value=m["Lc_cornes"])
-            lt_tete = g10.number_input("Long. Tête (LT)", value=m["LTete"])
-            lt_la = g11.number_input("Larg. Tête (Lt)", value=m["LtTete"])
-            
-            g12, g13, g14 = st.columns(3)
-            lo_lo = g12.number_input("Long. Oreilles (LO)", value=m["LO"])
-            lo_la = g13.number_input("Larg. Oreilles (Lo)", value=m["Lo"])
-            tc = g14.number_input("Tour Canon (TC)", value=m["TC"])
+            t1, t2, t3 = st.columns(3)
+            lc_cornes = t1.number_input("L. Cornes", value=m.get("Lc_cornes", 0.0))
+            lt_tete = t2.number_input("L. Tête", value=m.get("LTete", 0.0))
+            lt_la = t3.number_input("Larg. Tête", value=m.get("LtTete", 0.0))
+            lo_lo = t1.number_input("L. Oreille", value=m.get("LO", 0.0))
+            lo_la = t2.number_input("Larg. Oreille", value=m.get("Lo", 0.0))
+            tc = t3.number_input("T. Canon", value=m.get("TC", 0.0))
 
-        # --- EXPANDER 4 : REPRODUCTION ---
         with st.expander("4️⃣ Reproduction & Laine"):
             r1, r2, r3 = st.columns(3)
-            ly = r1.number_input("Long. Trayons (LY)", value=m["LY"])
-            ts = r2.number_input("Tour Scrotal (TS)", value=m["TS"])
-            ps = r3.number_input("Prof. Scrotale (PS)", value=m["PS"])
-            
-            r4, r5, r6 = st.columns(3)
-            lg = r4.number_input("Long. Gigot (LG)", value=m["LG"])
-            ll = r5.number_input("Long. Laine (LL)", value=m["LL"])
-            
-            ration_estim = round(poids * 0.035, 2)
-            r6.metric("Ration (kg)", ration_estim)
+            ly = r1.number_input("LY", value=m.get("LY", 0.0))
+            ts = r2.number_input("TS", value=m.get("TS", 0.0))
+            ps = r3.number_input("PS", value=m.get("PS", 0.0))
+            lg = r1.number_input("LG", value=m.get("LG", 0.0))
+            ll = r2.number_input("LL", value=m.get("LL", 0.0))
 
-        # --- BOUTON ENREGISTRER ---
-        if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
-            id_f = id_in if id_in else f"TEMP-{datetime.now().strftime('%H%M%S')}"
-            row = [
-                date.today(), id_f, race_in, age_in, poids, 
-                hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp, 
-                lc_cornes, lt_tete, lt_la, lo_lo, lo_la, tc, 
-                ly, ts, ps, lg, ll, 
-                wilaya_sel, commune_sel, ration_estim
-            ]
+        if st.form_submit_button("💾 ENREGISTRER LA FICHE"):
+            id_f = id_in if id_in else f"T-{datetime.now().strftime('%H%M%S')}"
+            row = [date.today(), id_f, race_in, age_in, poids, hg, hs, lb, 0, 0, 0, 0, li, lp, pp, tp, lc_cornes, lt_tete, lt_la, lo_lo, lo_la, tc, ly, ts, ps, lg, ll, wilaya_sel, commune_sel, round(poids*0.035,2)]
             pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
             st.session_state.step = 1
-            st.session_state.mesures_ia = {col: 0.0 for col in COLONNES}
-            st.success("✅ Enregistré !")
+            st.session_state.mesures_ia = {k: 0.0 for k in st.session_state.mesures_ia}
+            st.success("✅ Enregistré !"); st.rerun()
+
+with tabs[1]:
+    data = pd.read_csv(DB_FILE, sep=';')
+    if not data.empty:
+        st.dataframe(data, use_container_width=True)
+        id_m = st.selectbox("ID pour Action", data["ID"].unique())
+        if st.button(f"❌ Supprimer {id_m}"):
+            data[data["ID"]!=id_m].to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
             st.rerun()
 
-
+with tabs[3]:
+    st.write("**OviStat Vision Pro v2.4** | ENSV Alger")
+    if st.button("🔄 Reset Scan"): st.session_state.step = 1; st.rerun()
 # --- ONGLET 2 : HISTORIQUE & MODIF TOTALE ---
 with tabs[1]:
     st.subheader("📋 Gestion de la base de données")
