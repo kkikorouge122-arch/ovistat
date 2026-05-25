@@ -252,42 +252,35 @@ with tabs[0]:
             lp = c3.number_input("Larg. Poitrine (LP)", value=m["LP"])
             pp = c4.number_input("Prof. Poitrine (PP)", value=m["PP"])
 
-             with st.expander("3️⃣ Tête & Oreilles"):
-            # Ligne 1 : Cornes et Tête
+                   # --- EXPANDER 3 : TÊTE ---
+        with st.expander("3️⃣ Tête & Oreilles"):
             g9, g10, g11 = st.columns(3)
             lc_cornes = g9.number_input("Long. Cornes (Lc)", value=m["Lc_cornes"])
             lt_tete = g10.number_input("Long. Tête (LT)", value=m["LTete"])
             lt_la = g11.number_input("Larg. Tête (Lt)", value=m["LtTete"])
             
-            # Ligne 2 : Oreilles et Canon
             g12, g13, g14 = st.columns(3)
             lo_lo = g12.number_input("Long. Oreilles (LO)", value=m["LO"])
             lo_la = g13.number_input("Larg. Oreilles (Lo)", value=m["Lo"])
             tc = g14.number_input("Tour Canon (TC)", value=m["TC"])
 
-
-          with st.expander("4️⃣ Reproduction & Laine"):
-            # Ligne 1 : Appareil reproducteur
+        # --- EXPANDER 4 : REPRODUCTION ---
+        with st.expander("4️⃣ Reproduction & Laine"):
             r1, r2, r3 = st.columns(3)
             ly = r1.number_input("Long. Trayons (LY)", value=m["LY"])
             ts = r2.number_input("Tour Scrotal (TS)", value=m["TS"])
             ps = r3.number_input("Prof. Scrotale (PS)", value=m["PS"])
             
-            # Ligne 2 : Gigot et Laine
             r4, r5, r6 = st.columns(3)
             lg = r4.number_input("Long. Gigot (LG)", value=m["LG"])
             ll = r5.number_input("Long. Laine (LL)", value=m["LL"])
             
-            # Calcul de la ration affiché en temps réel
             ration_estim = round(poids * 0.035, 2)
             r6.metric("Ration (kg)", ration_estim)
 
-        # --- BOUTON D'ENREGISTREMENT FINAL ---
+        # --- BOUTON ENREGISTRER ---
         if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
-            # Génération de l'ID si vide
             id_f = id_in if id_in else f"TEMP-{datetime.now().strftime('%H%M%S')}"
-            
-            # Création de la ligne avec TOUTES les variables des expanders (30 colonnes)
             row = [
                 date.today(), id_f, race_in, age_in, poids, 
                 hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp, 
@@ -295,16 +288,11 @@ with tabs[0]:
                 ly, ts, ps, lg, ll, 
                 wilaya_sel, commune_sel, ration_estim
             ]
-            
-            # Sauvegarde physique dans le CSV
             pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
-            
-            # Réinitialisation pour l'animal suivant
             st.session_state.step = 1
-            st.session_state.mesures_ia = {col: 0.0 for col in COLONNES} # On vide la mémoire IA
-            st.success(f"✅ Fiche de l'animal {id_f} enregistrée avec succès !")
+            st.session_state.mesures_ia = {col: 0.0 for col in COLONNES}
+            st.success("✅ Enregistré !")
             st.rerun()
-
 
 
 # --- ONGLET 2 : HISTORIQUE & MODIF TOTALE ---
