@@ -77,22 +77,33 @@ else:
     bg_c, card_c, text_c, border_c = "#f8f9fa", "#ffffff", "#1f77b4", "#dee2e6"
     metric_bg = "#ffffff"
 
-st.markdown(f"""
+st.markdown("""
     <style>
-    .stApp {{ background-color: {bg_c}; color: {text_c}; }}
-    /* Onglets Modernes */
-    .stTabs [data-baseweb="tab-list"] {{ gap: 8px; background-color: {card_c}; padding: 10px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }}
-    .stTabs [data-baseweb="tab"] {{ height: 50px; border-radius: 10px; background-color: {bg_c}; color: {text_c}; border: none; }}
-    /* Boutons Géants Terrain */
-    .stButton>button {{ width: 100%; height: 55px; border-radius: 12px; font-weight: bold; background: linear-gradient(135deg, #1f77b4 0%, #125688 100%); color: white; border: none; box-shadow: 0 4px 15px rgba(31,119,180,0.3); }}
-    /* Métriques & Cards */
-    [data-testid="stMetric"] {{ background-color: {metric_bg} !important; padding: 15px; border-radius: 15px; border-left: 5px solid #1f77b4 !important; border: 1px solid {border_c}; }}
-    /* Caméra */
-    div[data-testid="stCameraInput"] video {{ border: 4px solid #1f77b4; border-radius: 20px; object-fit: cover !important; }}
-    /* Expanders */
-    .streamlit-expanderHeader {{ background-color: {card_c} !important; color: #1f77b4 !important; border-radius: 10px !important; }}
+    /* 1. On définit un conteneur solide pour la caméra */
+    div[data-testid="stCameraInput"] {
+        border: 4px solid #1f77b4 !important; /* Le cadre bleu revient ici */
+        border-radius: 20px !important;
+        overflow: hidden !important;
+        background-color: black;
+        margin-top: 10px;
+    }
+
+    /* 2. On force la vidéo à être grande et nette */
+    div[data-testid="stCameraInput"] video {
+        width: 100% !important;
+        height: 500px !important; /* Hauteur fixe pour bien voir le mouton */
+        object-fit: cover !important; /* Remplit le cadre sans bandes noires */
+    }
+
+    /* 3. On agrandit le bouton de capture pour le pouce */
+    div[data-testid="stCameraInput"] button {
+        height: 60px !important;
+        font-size: 18px !important;
+        background-color: #1f77b4 !important;
+    }
     </style>
     """, unsafe_allow_html=True)
+
 
 
 DB_FILE = "data_ovinstat_V16.csv"
