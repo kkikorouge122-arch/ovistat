@@ -79,8 +79,9 @@ def login():
 if not st.session_state.auth: login()
 # --- 3. CONFIGURATION DES BASES DE DONNÉES & GÉO ---
 # --- CONFIGURATION DES BASES DE DONNÉES & GÉO ---
+# --- 3. CONFIGURATION DES BASES DE DONNÉES & GÉO ---
 DB_FILE = "data_ovinstat_V16.csv"
-DB_SANTE = "data_sante_ovins.csv"  # <-- AJOUTER CETTE LIGNE
+DB_SANTE = "data_sante_ovins.csv"
 
 COLONNES = [
     "Date", "ID", "Race", "Age", "Poids", 
@@ -88,10 +89,11 @@ COLONNES = [
     "Lcornes", "LTete", "LtTete", "LO", "Lo", "TC", "LY", "TS", "PS", "LG", "LL", 
     "Wilaya", "Commune", "Ration"
 ]
-COL_SANTE = ["Date", "ID", "Type", "Produit", "Veterinaire", "Prochain_RDV"]  # <-- AJOUTER CETTE LIGNE
+COL_SANTE = ["Date", "ID", "Type", "Produit", "Veterinaire", "Prochain_RDV"]
 
 @st.cache_resource
-def load_yolo(): return YOLO('yolov8n.pt')
+def load_yolo(): 
+    return YOLO('yolov8n.pt')
 
 @st.cache_data
 def get_algeria_geo():
@@ -104,9 +106,7 @@ def get_algeria_geo():
         "51-Ouled Djellal", "52-Bordj Baji Mokhtar", "53-Béni Abbès", "54-Timimoun", "55-Touggourt", "56-Djanet", "57-In Salah", "58-In Guezzam"
     ]
     if os.path.exists("algeria_geo.csv"):
-        # On force Pandas à utiliser le point-virgule et l'encodage correct
         df_geo = pd.read_csv("algeria_geo.csv", sep=";", encoding='utf-8', on_bad_lines='skip')
-        # Nettoyage immédiat : on enlève les espaces en trop dans le fichier
         df_geo['wilaya_name'] = df_geo['wilaya_name'].str.strip()
         df_geo['commune_name'] = df_geo['commune_name'].str.strip()
     else:
@@ -124,10 +124,9 @@ for f, c in zip([DB_FILE, DB_SANTE], [COLONNES, COL_SANTE]):
     if not os.path.exists(f) or os.path.getsize(f) == 0:
         pd.DataFrame(columns=c).to_csv(f, index=False, sep=';', encoding='utf-8-sig')
 
-
-model = load_yolo_model()
+# Appels synchronisés des fonctions ( load_yolo corrigé ici )
+model = load_yolo()
 list_wilayas, df_communes = get_algeria_geo()
-data = load_data(DB_FILE, COLONNES)
 
 if not os.path.exists(DB_FILE) or os.path.getsize(DB_FILE) == 0:
     pd.DataFrame(columns=COLONNES).to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
@@ -138,6 +137,7 @@ data = pd.read_csv(DB_FILE, sep=';')
 # Interface structurelle des Onglets
 st.title("🐑 OviStat IA v2.5.1")
 tabs = st.tabs(["📥 Saisie", "🔍 Historique", "📊 Analyse", "ℹ️ À Propos"])
+
 # --- 4. ONGLET 1 : SCANNAGE IA PROGRESSIF ---
 with tabs[0]:
     st.subheader("📍 Localisation de l'étude")
