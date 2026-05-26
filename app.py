@@ -74,10 +74,10 @@ div[data-testid="stCameraInput"] {
 /* 2. Optimisation de la vidéo (Zoom Logiciel 1.2x) */
 div[data-testid="stCameraInput"] video {
     width: 100% !important;
-    height: 600px !important; /* Hauteur augmentée pour le recul */
+    height: 600px !important;
     object-fit: cover !important;
-    transform: scale(1.1); /* Petit zoom pour compenser la distance de 2m */
-    filter: contrast(1.1) brightness(1.1); /* Améliore la détection des bords pour l'IA */
+    transform: scale(1.1);
+    filter: contrast(1.1) brightness(1.1);
 }
 
 /* 3. Viseur de précision Sniper : PETIT ET TRANSPARENT */
@@ -86,10 +86,10 @@ div[data-testid="stCameraInput"]::after {
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    width: 80px; height: 80px; /* Taille de précision réduite */
-    border: 2px dashed rgba(255, 255, 255, 0.35); /* Pointillés fins semi-transparents */
+    width: 80px; height: 80px;
+    border: 2px dashed rgba(255, 255, 255, 0.35);
     border-radius: 50%;
-    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.25); /* Filtre d'ombrage doux */
+    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.25);
     pointer-events: none;
 }
 
