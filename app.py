@@ -47,19 +47,11 @@ with st.sidebar:
         st.success("Session fermée avec succès.")
         st.rerun()
     
-# --- 1. CONFIGURATION ---
-st.set_page_config(page_title="OviStat Vision Pro v2.1", page_icon="🐑", layout="wide")
+# --- 1. CONFIGURATION INITIALE ---
+st.set_page_config(page_title="OviStat Vision Pro v2.4", page_icon="🐑", layout="wide")
 
-# Couleurs dynamiques selon le mode
-if st.session_state.dark_mode:
-    bg_c, card_c, text_c, border_c = "#0e1117", "#1d2129", "#e0e0e0", "#3d4450"
-    metric_bg = "#12141d"
-else:
-    bg_c, card_c, text_c, border_c = "#f8f9fa", "#ffffff", "#1f77b4", "#dee2e6"
-    metric_bg = "#ffffff"
-
-    # --- B. ZONE DE SCAN IA HAUTE PRÉCISION ET VISAGE DISCRET (FUSIONNÉ) ---
-   st.markdown("""
+# --- STYLE CSS DU VISEUR (COLLÉ TOUT EN HAUT À L'INDENTATION ZÉRO) ---
+st.markdown("""
 <style>
 /* 1. Grand écran pour la visée à distance */
 div[data-testid="stCameraInput"] {
@@ -113,6 +105,15 @@ div[data-testid="stCameraInput"] button:active {
 }
 </style>
 """, unsafe_allow_html=True)
+
+
+# Couleurs dynamiques selon le mode
+if st.session_state.dark_mode:
+    bg_c, card_c, text_c, border_c = "#0e1117", "#1d2129", "#e0e0e0", "#3d4450"
+    metric_bg = "#12141d"
+else:
+    bg_c, card_c, text_c, border_c = "#f8f9fa", "#ffffff", "#1f77b4", "#dee2e6"
+    metric_bg = "#ffffff"
 
 
 DB_FILE = "data_ovinstat_V16.csv"
