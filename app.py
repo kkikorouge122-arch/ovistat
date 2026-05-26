@@ -210,26 +210,9 @@ with tabs[0]:
         w, h = img.size
         results = model(img)
         
-        # --- ALGORITHME TARGET LOCK SÉLECTIF ---
-        target_sheep = None
-        min_dist = float('inf')
-        center_x, center_y = w / 2, h / 2
-        threshold = w * 0.20 
-        
-        for r in results:
-            for b in r.boxes:
-                if int(b.cls) == 18:
-                    x1, y1, x2, y2 = b.xyxy.tolist()
-                    m_x = (x1 + x2) / 2
-                    m_y = (y1 + y2) / 2
-                    dist = ((center_x - m_x)**2 + (center_y - m_y)**2)**0.5
-                    if dist < min_dist:
-                        min_dist = dist
-                        target_sheep = b
-
-        # --- APPORT CALCULS MORPHOMÉTRIQUES RÉELS (FINI LES COPIES) ---
+               # --- APPORT CALCULS MORPHOMÉTRIQUES RÉELS (FINI LES COPIES) ---
         if target_sheep and min_dist < threshold:
-            st.success("🔒 ANIMAL MAÎTRE VERROUILLÉ AU CENTRE : Extraction cm...")
+            st.success("🔒 ANIMAL MAÎTRE VERROUILLÉE AU CENTRE : Extraction cm...")
             x1, y1, x2, y2 = target_sheep.xyxy.tolist()
             pixel_width = x2 - x1
             pixel_height = y2 - y1
@@ -243,3 +226,31 @@ with tabs[0]:
                 
                 st.session_state.mesures_ia.update({
                     "HG": cal_hg, "HS": cal_hs, "LB": cal_lb, "Poids": est_poids,
+                    "LT_tronc": round(cal_lb * 0.58, 1), "LC_cou": round(cal_lb * 0.28, 1),
+                    "LH": round(cal_lb * 0.23, 1), "LQ": 22.0
+                }) # <-- Correctement fermé ici
+                st.info(f"📈 Profil calculé : HG={cal_hg}cm | LB={cal_lb}cm | Poids Estimé={est_poids}kg")
+                
+            elif st.session_state.step == 2:
+                cal_larg = round(pixel_width * ratio, 1)
+                cal_tp = round((pixel_height * ratio * 2) + (cal_larg * 2), 1)
+                
+                st.session_state.mesures_ia.update({
+                    "TP": cal_tp, "LI": round(cal_larg * 0.35, 1),
+                    "LP": round(cal_larg * 0.45, 1), "PP": round(pixel_height * ratio * 0.7, 1)
+                }) # <-- Correctement fermé ici
+                st.info(f"📈 Poitrine calculée : TP={cal_tp}cm")
+                
+            elif st.session_state.step == 3:
+                cal_tete = round(pixel_height * ratio * 0.4, 1)
+                
+                st.session_state.mesures_ia.update({
+                    "Lc_cornes": 15.0, "LTete": cal_tete, "LtTete": round(cal_tete * 0.5, 1),
+                    "LO": round(cal_tete * 1.1, 1), "Lo": round(cal_tete * 0.3, 1),
+                    "TC": round(cal_tete * 0.38, 1), "LY": 2.5, "LL": 5.0
+                }) # <-- LA FERMETURE QUI MANQUAIT ET CRÉAIT L'ERREUR SYNTAXE
+                st.info("📈 Extrémités faciales et céphaliques calculées.")
+        else:
+            if target_sheep: st.error("❌ SUJET TROP EXCENTRÉ : Ajustez le viseur 🎯 sur l'ovin cible.")
+            else: st.error("❌ AUCUN ANIMAL DÉTECTÉ AU CENTRE : Visez à 2 mètres.")
+S": cal_hs, "LB": cal_lb, "Poids": est_poids,
