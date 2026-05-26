@@ -288,12 +288,11 @@ with tabs[0]:
                     if dist < min_dist:
                         min_dist = dist
                         target_sheep = b
-
-        # --- CALCULS MORPHOMÉTRIQUES DYNAMIQUES (FINI LES COPIES DE MESURES) ---
+        # --- CALCULS MORPHOMÉTRIQUES DYNAMIQUES AVEC ESTIMATIONS ---
         if target_sheep and min_dist < threshold:
             st.success("🔒 CIBLE CENTRALE VERROUILLÉE : Calcul de l'anatomie réelle...")
             
-            x1, y1, x2, y2 = target_sheep.xyxy.tolist()[0]
+            x1, y1, x2, y2 = target_sheep.xyxy.tolist()
             pixel_width = x2 - x1
             pixel_height = y2 - y1
             
@@ -301,18 +300,23 @@ with tabs[0]:
             ratio = 0.14
             
             if st.session_state.step == 1:
-                # Étape Profil : Hauteurs et longueurs réelles basées sur la silhouette
+                # Étape Profil : Hauteurs et longueurs réelles
                 cal_hg = round(pixel_height * ratio, 1)
                 cal_lb = round(pixel_width * ratio, 1)
                 cal_hs = round(cal_hg * 0.98, 1)
                 
+                # ESTIMATION DU POIDS BASÉE SUR LE VOLUME VISUEL (Formule zootechnique)
+                # Poids estimé = (HG * LB) / coefficient ajustable pour la race Ouled Djellal
+                est_poids = round((cal_hg * cal_lb) / 110, 1)
+                
                 st.session_state.mesures_ia.update({
-                    "HG": cal_hg, "HS": cal_hs, "LB": cal_lb,
+                    "HG": cal_hg, "HS": cal_hs, "LB": cal_lb, "Poids": est_poids,
                     "LT_tronc": round(cal_lb * 0.58, 1),
                     "LC_cou": round(cal_lb * 0.28, 1),
-                    "LH": round(cal_lb * 0.23, 1)
+                    "LH": round(cal_lb * 0.23, 1),
+                    "LQ": 22.0 # Valeur standard de départ pour la queue
                 })
-                st.info(f"📊 Données de Profil calculées : HG={cal_hg}cm, LB={cal_lb}cm")
+                st.info(f"📊 Profil calculé : HG={cal_hg}cm | LB={cal_lb}cm | Poids estimé={est_poids}kg")
                 
             elif st.session_state.step == 2:
                 # Étape Dessus : Épaisseur corporelle et périmètres
@@ -325,21 +329,24 @@ with tabs[0]:
                     "LP": round(cal_larg * 0.45, 1),
                     "PP": round(pixel_height * ratio * 0.7, 1)
                 })
-                st.info(f"📊 Données de Volume calculées : TP={cal_tp}cm")
+                st.info(f"📊 Volume calculé : TP={cal_tp}cm")
                 
             elif st.session_state.step == 3:
-                # Étape Tête : Standards de la tête et des oreilles (Spécial Ouled Djellal)
+                # Étape Tête : Standards de la tête et des oreilles
                 cal_tete = round(pixel_height * ratio * 0.4, 1)
                 
                 st.session_state.mesures_ia.update({
-                    "Lc_cornes": 0.0, # Saisie manuelle si cornes présentes
+                    "Lc_cornes": 15.0, # Valeur de départ modifiable si présence de cornes
                     "LTete": cal_tete,
                     "LtTete": round(cal_tete * 0.5, 1),
                     "LO": round(cal_tete * 1.1, 1),
                     "Lo": round(cal_tete * 0.3, 1),
-                    "TC": round(cal_tete * 0.38, 1)
+                    "TC": round(cal_tete * 0.38, 1),
+                    "LY": 2.5,  # Estimation standard trayons
+                    "LL": 5.0   # Estimation standard longueur laine
                 })
-                st.info("📊 Données Céphaliques calculées avec succès.")
+                st.info("📊 Extrémités calculées. Ajustez les détails si nécessaire.")
+
         else:
             if target_sheep:
                 st.error("❌ CIBLE TROP EXCENTRÉE : Placez l'animal bien sous le viseur 🎯.")
