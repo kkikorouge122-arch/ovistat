@@ -377,6 +377,7 @@ with tabs[0]:
             pp = g7.number_input("PP (cm)", value=float(m.get("PP", 0.0)))
             tp = g8.number_input("TP (cm)", value=float(m.get("TP", 0.0)))
 
+                # --- 8 ESPACES DE DÉCALAGE POUR TOUT CE BLOC ---
         with st.expander("3️⃣ Tête & Oreilles"):
             t1, t2, t3 = st.columns(3)
             lc_cornes = t1.number_input("L. Cornes", value=float(m.get("Lc_cornes", 0.0)))
@@ -397,6 +398,29 @@ with tabs[0]:
             ll = r5.number_input("LL", value=float(m.get("LL", 0.0)))
             
             # Calcul en temps réel de la ration alimentaire
+            ration_estim = round(poids * 0.035, 2)
+            r6.metric("Ration Sug. (kg)", f"{ration_estim} kg")
+
+        # CE BOUTON DOIT COMMENCER EXACTEMENT AVEC 8 ESPACES
+        if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
+            id_f = id_in if id_in else f"T-{datetime.now().strftime('%H%M%S')}"
+            
+            # Construction de la ligne de données complète
+            row = [
+                date.today(), id_f, race_in, age_in, poids, 
+                hg, hs, lb, 0.0, lt_t, lc_c, lh, li, lp, pp, tp, 
+                lc_cornes, lt_tete, lt_la, lo_lo, lo_la, tc, 
+                ly, ts, ps, lg, ll, 
+                wilaya_sel, commune_sel, ration_estim
+            ]
+            pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
+            
+            # Reset complet pour l'animal suivant
+            st.session_state.step = 1
+            st.session_state.mesures_ia = {k: 0.0 for k in st.session_state.mesures_ia}
+            st.success(f"✅ Animal {id_f} enregistré avec succès !")
+            st.rerun()
+
 
 # --- ONGLET 2 : HISTORIQUE & MODIF TOTALE ---
 with tabs[1]:
