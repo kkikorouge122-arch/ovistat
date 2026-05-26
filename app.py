@@ -110,10 +110,6 @@ def load_data(file, cols):
         except: return pd.DataFrame(columns=cols)
     return pd.DataFrame(columns=cols)
 
-# Initialisation des fichiers
-for f, c in zip([DB_FILE, DB_SANTE], [COLONNES, COL_SANTE]):
-    if not os.path.exists(f) or os.path.getsize(f) == 0:
-        pd.DataFrame(columns=c).to_csv(f, index=False, sep=';', encoding='utf-8-sig')
 
 model = load_yolo_model()
 list_wilayas, df_communes = get_algeria_geo()
