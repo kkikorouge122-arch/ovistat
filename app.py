@@ -1,23 +1,64 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 import os
 from datetime import datetime, date
 from ultralytics import YOLO
 from PIL import Image
 from fpdf import FPDF
-# --- 1. CONFIGURATION & SÉCURITÉ ---
-st.set_page_config(page_title="OviStat Vision Pro v2.4", page_icon="🐑", layout="wide")
-# --- ALGORITHME ANTI-DOUBLON MORPHOMÉTRIQUE ---
-# Le code cherche si un profil similaire existe déjà dans l'historique
-doublon_potentiel = data[
-    (data['Poids'].between(poids - 0.5, poids + 0.5)) &
-    (data['HG'].between(hg - 1.0, hg + 1.0)) &
-    (data['LB'].between(lb - 1.0, lb + 1.0))
-]
 
-if not doublon_potentiel.empty:
-    st.error("⚠️ ATTENTION : Un ovin avec des mensurations quasi-identiques existe déjà dans la base. Êtes-vous sûr de ne pas avoir déjà scanné cet animal ?")
+# --- CONFIGURATION INITIALE ---
+st.set_page_config(page_title="OviStat Vision Pro v2.4", page_icon="🐑", layout="wide")
+
+# --- LE STYLE CSS FUSIONNÉ (ZÉRO ESPACE À GAUCHE) ---
+st.markdown("""
+<style>
+div[data-testid="stCameraInput"] {
+    border: 5px solid #1f77b4 !important;
+    border-radius: 25px !important;
+    background-color: #000;
+    max-width: 800px;
+    margin: auto;
+    position: relative;
+}
+div[data-testid="stCameraInput"] video {
+    width: 100% !important;
+    height: 600px !important;
+    object-fit: cover !important;
+    transform: scale(1.1);
+    filter: contrast(1.1) brightness(1.1);
+}
+div[data-testid="stCameraInput"]::after {
+    content: "";
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px; height: 80px;
+    border: 2px dashed rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.25);
+    pointer-events: none;
+}
+div[data-testid="stCameraInput"] button {
+    height: 75px !important;
+    width: 75px !important;
+    border-radius: 50% !important;
+    border: 4px solid white !important;
+    background-color: #1f77b4 !important;
+    position: relative !important; 
+    margin: 15px auto !important; 
+    display: block !important;
+    z-index: 20;
+    opacity: 0.95;
+    transition: all 0.2s ease;
+}
+div[data-testid="stCameraInput"] button:active {
+    transform: scale(0.92) !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ... (Ici vous laissez votre système d'authentification login et initialisation de YOLO) ...
+
 if 'auth' not in st.session_state: st.session_state.auth = False
 if 'step' not in st.session_state: st.session_state.step = 1
 if 'last_photo' not in st.session_state: st.session_state.last_photo = None
@@ -55,62 +96,7 @@ with st.sidebar:
         st.session_state.auth = False
         st.success("Session fermée avec succès.")
         st.rerun()
-    
-# --- 1. CONFIGURATION INITIALE ---
 
-st.markdown("""
-<style>
-/* 1. Grand écran pour la visée à distance */
-div[data-testid="stCameraInput"] {
-    border: 5px solid #1f77b4 !important;
-    border-radius: 25px !important;
-    background-color: #000;
-    max-width: 800px;
-    margin: auto;
-    position: relative;
-}
-
-/* 2. Optimisation de la vidéo (Zoom Logiciel 1.2x) */
-div[data-testid="stCameraInput"] video {
-    width: 100% !important;
-    height: 600px !important;
-    object-fit: cover !important;
-    transform: scale(1.1);
-    filter: contrast(1.1) brightness(1.1);
-}
-
-/* 3. Viseur de précision Sniper : PETIT ET TRANSPARENT */
-div[data-testid="stCameraInput"]::after {
-    content: "";
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 80px; height: 80px;
-    border: 2px dashed rgba(255, 255, 255, 0.35);
-    border-radius: 50%;
-    box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.25);
-    pointer-events: none;
-}
-
-/* 4. BOUTON DE CAPTURE RELOCALISÉ SOUS LE CADRAN SANS DEBORDEMENT */
-div[data-testid="stCameraInput"] button {
-    height: 75px !important;
-    width: 75px !important;
-    border-radius: 50% !important;
-    border: 4px solid white !important;
-    background-color: #1f77b4 !important;
-    position: relative !important; /* Modifié de absolute à relative pour sortir du cadre */
-    margin: 15px auto !important; /* Centre automatiquement le bouton en dessous */
-    display: block !important;
-    z-index: 20;
-    opacity: 0.95;
-    transition: all 0.2s ease;
-}
-div[data-testid="stCameraInput"] button:active {
-    transform: scale(0.92) !important;
-}
-</style>
-""", unsafe_allow_html=True)
 
 
 
