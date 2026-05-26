@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
 import os
 from datetime import datetime, date
 from ultralytics import YOLO
@@ -7,7 +8,7 @@ from PIL import Image
 from fpdf import FPDF
 import numpy as np
 
-# --- CONFIGURATION INITIALE ---
+# --- 1. CONFIGURATION INITIALE ---
 st.set_page_config(page_title="OviStat Vision Pro v2.4", page_icon="🐑", layout="wide")
 
 # --- LE STYLE CSS FUSIONNÉ (ZÉRO ESPACE À GAUCHE) ---
@@ -65,11 +66,15 @@ div[data-testid="stCameraInput"] button:active {
 </style>
 """, unsafe_allow_html=True)
 
-# --- SESSIONS STATE INITIALISATION ---
-if 'auth' not in st.session_state: st.session_state.auth = False
-if 'step' not in st.session_state: st.session_state.step = 1
-if 'last_photo' not in st.session_state: st.session_state.last_photo = None
-if 'dark_mode' not in st.session_state: st.session_state.dark_mode = False
+# --- INITIALISATION DE L'ÉTAT DE SESSION ---
+if 'auth' not in st.session_state:
+    st.session_state.auth = False
+if 'dark_mode' not in st.session_state:
+    st.session_state.dark_mode = False
+if 'step' not in st.session_state:
+    st.session_state.step = 1
+if 'last_photo' not in st.session_state:
+    st.session_state.last_photo = None
 if 'mesures_ia' not in st.session_state:
     st.session_state.mesures_ia = {
         "Poids": 0.0, "HG": 0.0, "HS": 0.0, "LB": 0.0, "LT_tronc": 0.0, "LC_cou": 0.0, "LH": 0.0, "LQ": 0.0,
@@ -78,23 +83,44 @@ if 'mesures_ia' not in st.session_state:
         "LY": 0.0, "TS": 0.0, "PS": 0.0, "LG": 0.0, "LL": 0.0
     }
 
-# --- SYSTÈME D'AUTHENTIFICATION ---
+# --- FONCTION D'AUTHENTIFICATION ---
 def login():
     c1, c2, c3 = st.columns([1, 2, 1])
     with c2:
-        st.image("https://flaticon.com", width=100)
-        st.title("🛡️ Accès Sécurisé ENSV")
-        pwd = st.text_input("🔑 Code d'accès chercheur :", type="password")
-        if st.button("DÉVERROUILLER"):
-            if pwd == "ENSVAlger2026":
-                st.session_state.auth = True
-                st.rerun()
-            else: st.error("Code incorrect")
+        st.image("https://flaticon.com", width=120) 
+        st.title("🛡️ OviStat Vision Pro")
+        st.subheader("École Nationale Supérieure Vétérinaire d'Alger")
+        st.markdown("---")
+        st.info("""
+        **🎓 Cadre : Recherche Zootechnique & Innovation**  
+        Ce système expert d'analyse morphométrique assisté par IA est la propriété intellectuelle de **MERABIA KAWTHER (ENSV)**.
+        """)
+        with st.container():
+            pwd = st.text_input("🔑 Code d'accès chercheur :", type="password")
+            if st.button("DÉVERROUILLER L'INTERFACE"):
+                if pwd == "ENSVAlger2026":
+                    st.session_state.auth = True
+                    st.success("Accès autorisé. Bienvenue, Docteur.")
+                    st.rerun()
+                else:
+                    st.error("Accès refusé. Identifiants incorrects.")
+        st.markdown("---")
+        st.caption("📍 El Alia, Alger - Laboratoire de Zootechnie")
     st.stop()
 
-if not st.session_state.auth: login()
+if not st.session_state.auth:
+    login()
 
-# --- CONFIGURATION COULEURS DYNAMIQUES (MODE NUIT) ---
+# --- CONFIGURATION BARRE LATÉRALE ---
+with st.sidebar:
+    st.divider()
+    st.subheader("🔐 Sécurité")
+    if st.button("🚪 Se déconnecter / Verrouiller"):
+        st.session_state.auth = False
+        st.success("Session fermée avec succès.")
+        st.rerun()
+
+# Couleurs dynamiques selon le mode nuit
 if st.session_state.dark_mode:
     bg_c, card_c, text_c, border_c = "#0e1117", "#1d2129", "#e0e0e0", "#3d4450"
     metric_bg = "#12141d"
@@ -102,7 +128,6 @@ else:
     bg_c, card_c, text_c, border_c = "#f8f9fa", "#ffffff", "#1f77b4", "#dee2e6"
     metric_bg = "#ffffff"
 
-# --- FICHIERS ET STRUCTURE BASE DE DONNÉES ---
 DB_FILE = "data_ovinstat_V16.csv"
 DB_SANTE = "data_sante_ovins.csv"
 
@@ -114,7 +139,7 @@ COLONNES = [
 ]
 COL_SANTE = ["Date", "ID", "Type", "Produit", "Veterinaire", "Prochain_RDV"]
 
-# --- FONCTIONS FILTRAGE & CHARGEMENT ---
+# --- FONCTIONS RÉSEAU ET DONNÉES ---
 @st.cache_resource
 def load_yolo_model(): return YOLO('yolov8n.pt')
 
@@ -142,7 +167,7 @@ def load_data(file, cols):
         except: return pd.DataFrame(columns=cols)
     return pd.DataFrame(columns=cols)
 
-# Traitement préventif des bases de données
+# Initialisation préventive des fichiers
 for f, c in zip([DB_FILE, DB_SANTE], [COLONNES, COL_SANTE]):
     if not os.path.exists(f) or os.path.getsize(f) == 0:
         pd.DataFrame(columns=c).to_csv(f, index=False, sep=';', encoding='utf-8-sig')
@@ -151,7 +176,7 @@ model = load_yolo_model()
 list_wilayas, df_communes = get_algeria_geo()
 data = load_data(DB_FILE, COLONNES)
 
-# --- CONFIGURATION INTERFACE & MENUS ---
+# Barre latérale graphique
 with st.sidebar:
     st.image("https://flaticon.com", width=80)
     st.title("OviStat Menu")
@@ -159,31 +184,17 @@ with st.sidebar:
         st.session_state.dark_mode = not st.session_state.dark_mode
         st.rerun()
     st.divider()
-    st.subheader("🔐 Sécurité")
-    if st.button("🚪 Se déconnecter / Verrouiller"):
-        st.session_state.auth = False
-        st.success("Session fermée avec succès.")
-        st.rerun()
-    st.divider()
     with st.expander("⚙️ MAINTENANCE"):
         if st.button("🗑️ Vider la base"):
             if os.path.exists(DB_FILE): os.remove(DB_FILE)
             st.rerun()
 
-st.title("🐑 OviStat IA v2.4.6")
+# Interface structurelle des Onglets
+st.title("🐑 OviStat IA v2.4.8")
 tabs = st.tabs(["📥 Saisie", "🔍 Historique & Modif", "📊 Analyse", "🩺 Santé", "ℹ️ À Propos"])
 
-# --- ONGLET 1 : SAISIE ---
-if 'mesures_ia' not in st.session_state:
-    st.session_state.mesures_ia = {
-        "Poids": 0.0, "HG": 0.0, "HS": 0.0, "LB": 0.0, "LT_tronc": 0.0, "LC_cou": 0.0, "LH": 0.0, "LQ": 0.0,
-        "TP": 0.0, "LI": 0.0, "LP": 0.0, "PP": 0.0,
-        "Lc_cornes": 0.0, "LTete": 0.0, "LtTete": 0.0, "LO": 0.0, "Lo": 0.0, "TC": 0.0,
-        "LY": 0.0, "TS": 0.0, "PS": 0.0, "LG": 0.0, "LL": 0.0
-    }
-
-# --- ONGLET 1 : SCAN PROGRESSIF ---
-with tabs:
+# --- ONGLET 0 : SAISIE DYNAMIQUE ---
+with tabs[0]:
     st.subheader("📍 Localisation de l'étude")
     col_w, col_c = st.columns(2)
     wilaya_sel = col_w.selectbox("Wilaya", list_wilayas, key="w_dyn")
@@ -200,19 +211,22 @@ with tabs:
     st.divider()
     
     st.write(f"### 📸 Étape {st.session_state.step}/3 : {['Profil', 'Dessus', 'Tête'][st.session_state.step-1]}")
-    st.caption("💡 Centrez précisément la silhouette de l'ovin sous le collimateur circulaire discret.")
+    st.caption("💡 Ajustez le flanc ou la zone ciblée précisément au centre de l'anneau pointillé discret.")
     
-    if st.button(f"✅ VALIDER LA PHOTO {st.session_state.step}", type="primary", use_container_width=True):
-        if st.session_state.last_photo:
-            if st.session_state.step < 3:
-                st.session_state.step += 1
-                st.session_state.last_photo = None
-                st.rerun()
+    # 1. LE BOUTON DE VALIDATION (Placé en haut pour mobile)
+    if st.session_state.step <= 3:
+        if st.button(f"✅ ÉTAPE SUIVANTE : VALIDER LA PHOTO {st.session_state.step}", type="primary", use_container_width=True):
+            if st.session_state.last_photo:
+                if st.session_state.step < 3:
+                    st.session_state.step += 1
+                    st.session_state.last_photo = None
+                    st.rerun()
+                else:
+                    st.success("🎯 Étude morphométrique et anatomique complète !")
             else:
-                st.success("🎯 Étude morphométrique et anatomique complète !")
-        else:
-            st.error("⚠️ Capturez l'animal d'abord avec le déclencheur circulaire.")
+                st.error("⚠️ Capturez d'abord l'animal (cliquez sur le gros cercle bleu ci-dessous).")
 
+    # 2. LA CAMÉRA AVEC CAPTURE POSITIONNÉE EN DESSOUS
     photo = st.camera_input("Scanner l'animal", key=f"precision_cam_v4_{st.session_state.step}")
     
     if photo:
@@ -221,6 +235,7 @@ with tabs:
         w, h = img.size
         results = model(img)
         
+        # --- ALGORITHME DE TARGET LOCK CENTRAL SÉLECTIF ---
         target_sheep = None
         min_dist = float('inf')
         center_x, center_y = w / 2, h / 2
@@ -228,7 +243,7 @@ with tabs:
         
         for r in results:
             for b in r.boxes:
-                if int(b.cls) == 18:
+                if int(b.cls) == 18: # Ovin
                     x1, y1, x2, y2 = b.xyxy.tolist()
                     m_x = (x1 + x2) / 2
                     m_y = (y1 + y2) / 2
@@ -237,8 +252,9 @@ with tabs:
                         min_dist = dist
                         target_sheep = b
 
+        # --- CALCULS MORPHOMÉTRIQUES RÉELS DYNAMIQUES ---
         if target_sheep and min_dist < threshold:
-            st.success("🔒 ANIMAL MAÎTRE VERROUILLÉ AU CENTRE : Extraction cm...")
+            st.success("🔒 SUJET CENTRAL VERROUILLÉ : Extraction géométrique active...")
             x1, y1, x2, y2 = target_sheep.xyxy.tolist()
             pixel_width = x2 - x1
             pixel_height = y2 - y1
@@ -255,7 +271,7 @@ with tabs:
                     "LT_tronc": round(cal_lb * 0.58, 1), "LC_cou": round(cal_lb * 0.28, 1),
                     "LH": round(cal_lb * 0.23, 1), "LQ": 22.0
                 })
-                st.info(f"📈 Profil calculé : HG={cal_hg}cm | LB={cal_lb}cm | Poids Estimé={est_poids}kg")
+                st.info(f"📈 Gabarit Profil : HG={cal_hg}cm | LB={cal_lb}cm | Masse estimée={est_poids}kg")
                 
             elif st.session_state.step == 2:
                 cal_larg = round(pixel_width * ratio, 1)
@@ -265,24 +281,25 @@ with tabs:
                     "TP": cal_tp, "LI": round(cal_larg * 0.35, 1),
                     "LP": round(cal_larg * 0.45, 1), "PP": round(pixel_height * ratio * 0.7, 1)
                 })
-                st.info(f"📈 Poitrine calculée : TP={cal_tp}cm")
+                st.info(f"📈 Volume thoracique : TP={cal_tp}cm")
                 
             elif st.session_state.step == 3:
                 cal_tete = round(pixel_height * ratio * 0.4, 1)
-                
                 st.session_state.mesures_ia.update({
                     "Lc_cornes": 15.0, "LTete": cal_tete, "LtTete": round(cal_tete * 0.5, 1),
                     "LO": round(cal_tete * 1.1, 1), "Lo": round(cal_tete * 0.3, 1),
                     "TC": round(cal_tete * 0.38, 1), "LY": 2.5, "LL": 5.0
                 })
-                st.info("📈 Extrémités faciales et céphaliques calculées.")
+                st.info("📈 Paramètres céphaliques et extrémités calculés.")
         else:
-            if target_sheep: st.error("❌ SUJET TROP EXCENTRÉ : Ajustez le viseur 🎯 sur l'ovin cible.")
-            else: st.error("❌ AUCUN ANIMAL DÉTECTÉ AU CENTRE : Visez à 2 mètres.")
+            if target_sheep: 
+                st.error("❌ SUJET TROP ÉLOIGNÉ DU COLLIMATEUR : Recadrez la cible sous le viseur 🎯.")
+            else: 
+                st.error("❌ AUCUN INDIVIDU DÉTECTÉ : Stabilisez le smartphone à 2 mètres.")
 
     st.divider()
 
-    # --- FORMULAIRE DE MESURATIONS ---
+    # --- FORMULAIRE ET CARTES EXPANDERS ---
     with st.form("form_final"):
         st.subheader("📋 Fiche d'Analyse d'Identité")
         m = st.session_state.mesures_ia
@@ -339,7 +356,7 @@ with tabs:
                     poids_hist = pd.to_numeric(data['Poids'], errors='coerce')
                     hg_hist = pd.to_numeric(data['HG'], errors='coerce')
                     doublon_potentiel = data[
-                        (poids_hist.between(poids - 1.0, poids + 1.0)) &
+                        (poids_hist.between(poids - 1.0, poids + 1.0)) & 
                         (hg_hist.between(hg - 1.0, hg + 1.0))
                     ]
                 except:
@@ -348,19 +365,65 @@ with tabs:
                 doublon_potentiel = pd.DataFrame()
 
             if not doublon_potentiel.empty:
-                st.error("⚠️ ALERTE DE SÉCURITÉ : Un ovin avec des mensurations presque identiques est déjà présent dans la base.")
+                st.error("⚠️ ALERTE : Un ovin avec des mensurations presque identiques est déjà présent dans le registre.")
             else:
                 row = [
-                    date.today(), id_f, race_in, age_in, poids, 
-                    hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp, 
-                    lc_cornes, lt_tete, lt_la, lo_lo, lo_la, tc, 
-                    ly, ts, ps, lg, ll, 
+                    date.today(), id_f, race_in, age_in, poids,
+                    hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp,
+                    lc_cornes, lt_tete, lt_la, lo_lo, lo_la, tc,
+                    ly, ts, ps, lg, ll,
                     wilaya_sel, commune_sel, ration_estim
                 ]
                 pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
-                
                 st.session_state.step = 1
                 st.session_state.mesures_ia = {k: 0.0 for k in st.session_state.mesures_ia}
-                st.success(f"✅ Fiche de l'animal {id_f} validée !")
+                st.success(f"✅ Fiche de l'animal {id_f} ajoutée au registre !")
                 st.rerun()
 
+# --- ONGLET 1 : HISTORIQUE ---
+with tabs[1]:
+    data = load_data(DB_FILE, COLONNES)
+    st.subheader("📋 Registre d'étude des troupeaux")
+    if not data.empty:
+        st.dataframe(data, use_container_width=True)
+        st.divider()
+        id_m = st.selectbox("ID de l'ovin pour Action", data["ID"].unique(), key="sel_hist_action")
+        if st.button(f"❌ Supprimer la fiche de {id_m}", type="primary"):
+            data[data["ID"] != id_m].to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
+            st.rerun()
+        st.download_button("📥 Télécharger la base (CSV)", data.to_csv(sep=';', index=False).encode('utf-8-sig'), "OviStat_Export.csv")
+
+# --- ONGLET 2 : ANALYSE ---
+with tabs[2]:
+    st.subheader("📊 Audit Morphométrique")
+    if not data.empty:
+        target = st.selectbox("Sélectionner le sujet d'étude", data["ID"].unique(), key="sel_audit")
+        anim = data[data["ID"] == target].iloc[-1]
+        try:
+            ic = float(anim['Poids']) / float(anim['LB']) if float(anim['LB']) > 0 else 0
+            ir = (float(anim['TP'])**2) / float(anim['HG']) if float(anim['HG']) > 0 else 0
+            c_an1, c_an2 = st.columns(2)
+            c_an1.metric("🥩 Indice de Compacité", f"{ic:.2f}")
+            c_an2.metric("🏗️ Indice de Robustesse", f"{ir:.2f}")
+        except Exception as e:
+            st.error(f"Erreur indices : {e}")
+
+# --- ONGLET 3 : SANTÉ ---
+with tabs[3]:
+    st.subheader("🩺 Suivi Sanitaire")
+    with st.form("form_sanitaire"):
+        id_s = st.selectbox("Sélectionner l'animal", data["ID"].unique()) if not data.empty else "N/A"
+        acte = st.text_input("Désignation du soin")
+        if st.form_submit_button("💉 Valider l'acte"):
+            pd.DataFrame([[date.today(), id_s, "Soin", acte, "Dr. Ahmed", date.today()]], columns=COL_SANTE).to_csv(DB_SANTE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
+            st.success("Soin enregistré.")
+
+# --- ONGLET 4 : À PROPOS ---
+with tabs[4]:
+    st.header("ℹ️ Informations Système")
+    st.write("OviStat Vision Pro v2.4.8 | ENSV Alger")
+    st.write("Auteur : MERABIA KAWTHER")
+    if st.button("🔄 Reset Scan"):
+        st.session_state.step = 1
+        st.session_state.mesures_ia = {k: 0.0 for k in st.session_state.mesures_ia}
+        st.rerun()
