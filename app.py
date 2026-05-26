@@ -78,7 +78,6 @@ def login():
 
 if not st.session_state.auth: login()
 # --- 3. CONFIGURATION DES BASES DE DONNÉES & GÉO ---
-# --- CONFIGURATION DES BASES DE DONNÉES & GÉO ---
 # --- 3. CONFIGURATION DES BASES DE DONNÉES & GÉO ---
 DB_FILE = "data_ovinstat_V16.csv"
 DB_SANTE = "data_sante_ovins.csv"
@@ -124,7 +123,7 @@ for f, c in zip([DB_FILE, DB_SANTE], [COLONNES, COL_SANTE]):
     if not os.path.exists(f) or os.path.getsize(f) == 0:
         pd.DataFrame(columns=c).to_csv(f, index=False, sep=';', encoding='utf-8-sig')
 
-# Appels synchronisés des fonctions ( load_yolo corrigé ici )
+# Appels synchronisés des fonctions
 model = load_yolo()
 list_wilayas, df_communes = get_algeria_geo()
 
@@ -140,9 +139,9 @@ tabs = st.tabs(["📥 Saisie", "🔍 Historique", "📊 Analyse", "ℹ️ À Pro
 
 # --- 4. ONGLET 1 : SCANNAGE IA PROGRESSIF ---
 with tabs[0]:
-      st.subheader("📍 Localisation de l'étude")
+    st.subheader("📍 Localisation de l'étude")
     
-    # Éléments dynamiques (Hors formulaire pour mise à jour instantanée)
+    # Éléments dynamiques (Parfaitement alignés à 4 espaces)
     col_w, col_c = st.columns(2)
     wilaya_sel = col_w.selectbox("Wilaya", list_wilayas, key="w_dyn")
     
