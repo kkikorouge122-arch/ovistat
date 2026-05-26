@@ -92,17 +92,26 @@ else:
             box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.25); /* Filtre d'ombrage plus doux */
             pointer-events: none;
         }
-        /* Point rouge de ciblage semi-transparent */
-        div[data-testid="stCameraInput"]::before {
-            content: "🎯";
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 26px; /* Légèrement plus petit */
-            opacity: 0.5; /* Rendu transparent à 50% */
-            z-index: 10;
-            pointer-events: none;
+             /* 5. Bouton de capture géant pour éviter les flous de bougé au clic */
+        div[data-testid="stCameraInput"] button {
+            height: 75px !important;
+            width: 75px !important;
+            border-radius: 50% !important;
+            border: 4px solid white !important;
+            background-color: #1f77b4 !important;
+            position: absolute !important;
+            bottom: 20px !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            z-index: 20;
+            opacity: 0.85;
+            transition: all 0.2s ease;
         }
+        div[data-testid="stCameraInput"] button:active {
+            transform: translateX(-50%) scale(0.92) !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
 
 DB_FILE = "data_ovinstat_V16.csv"
 DB_SANTE = "data_sante_ovins.csv"
