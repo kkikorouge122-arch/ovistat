@@ -140,12 +140,23 @@ tabs = st.tabs(["📥 Saisie", "🔍 Historique", "📊 Analyse", "ℹ️ À Pro
 
 # --- 4. ONGLET 1 : SCANNAGE IA PROGRESSIF ---
 with tabs[0]:
-    st.subheader("📍 Localisation de l'étude")
+      st.subheader("📍 Localisation de l'étude")
+    
+    # Éléments dynamiques (Hors formulaire pour mise à jour instantanée)
     col_w, col_c = st.columns(2)
     wilaya_sel = col_w.selectbox("Wilaya", list_wilayas, key="w_dyn")
-    commune_sel = col_c.text_input("Commune (Saisie manuelle)", value="Djelfa", key="c_man")
+    
+    # Filtrage
+    w_clean = wilaya_sel.split("-")[-1].strip()
+    mask = df_communes['wilaya_name'].str.strip().str.lower() == w_clean.lower()
+    communes_possibles = df_communes[mask]['commune_name'].unique().tolist()
+    
+    if communes_possibles:
+        commune_sel = col_c.selectbox(f"Communes de {w_clean}", sorted(communes_possibles), key="c_dyn")
+    else:
+        commune_sel = col_c.text_input("Commune (Saisie manuelle)", key="c_man")
+        st.warning(f"⚠️ Aucune commune trouvée pour {w_clean}")
 
-    st.divider()
     st.write(f"### 📸 Étape {st.session_state.step}/3 : {['Profil', 'Dessus', 'Tête'][st.session_state.step-1]}")
     
     if st.button(f"✅ ÉTAPE SUIVANTE : VALIDER LA PHOTO {st.session_state.step}", type="primary", use_container_width=True):
