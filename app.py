@@ -104,9 +104,20 @@ def get_algeria_geo():
         df_geo = pd.DataFrame(columns=["wilaya_name", "commune_name"])
     return wilayas, df_geo
 
+def load_data(file, cols):
+    if os.path.exists(file):
+        try: return pd.read_csv(file, sep=';', encoding='utf-8-sig', on_bad_lines='skip')
+        except: return pd.DataFrame(columns=cols)
+    return pd.DataFrame(columns=cols)
 
-model = load_yolo()
+# Initialisation des fichiers
+for f, c in zip([DB_FILE, DB_SANTE], [COLONNES, COL_SANTE]):
+    if not os.path.exists(f) or os.path.getsize(f) == 0:
+        pd.DataFrame(columns=c).to_csv(f, index=False, sep=';', encoding='utf-8-sig')
+
+model = load_yolo_model()
 list_wilayas, df_communes = get_algeria_geo()
+data = load_data(DB_FILE, COLONNES)
 
 if not os.path.exists(DB_FILE) or os.path.getsize(DB_FILE) == 0:
     pd.DataFrame(columns=COLONNES).to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
