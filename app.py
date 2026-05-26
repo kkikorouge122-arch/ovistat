@@ -59,82 +59,50 @@ else:
     metric_bg = "#ffffff"
 
     # --- B. ZONE DE SCAN IA HAUTE PRÉCISION ET VISAGE DISCRET (FUSIONNÉ) ---
-    st.markdown("""
-        <style>
-        /* 1. Grand écran centré pour la visée à distance (2 mètres) */
-        div[data-testid="stCameraInput"] {
-            border: 5px solid #1f77b4 !important;
-            border-radius: 25px !important;
-            background-color: #000;
-            max-width: 800px;
-            margin: auto;
-            position: relative;
-            overflow: hidden !important;
-        }
+   st.markdown("""
+    <style>
+    /* 1. Grand écran pour la visée à distance */
+    div[data-testid="stCameraInput"] {
+        border: 5px solid #1f77b4 !important;
+        border-radius: 25px !important;
+        background-color: #000;
+        max-width: 800px;
+        margin: auto;
+        position: relative;
+    }
 
-        /* 2. Optimisation de la vidéo (Zoom Logiciel 1.15x & Amélioration des bords) */
-        div[data-testid="stCameraInput"] video {
-            width: 100% !important;
-            height: 600px !important; /* Hauteur augmentée pour le recul terrain */
-            object-fit: cover !important;
-            transform: scale(1.15); /* Zoom optimal pour le recul de 2m */
-            filter: contrast(1.15) brightness(1.1); /* Augmente les contrastes pour l'IA */
-        }
+    /* 2. Optimisation de la vidéo (Zoom Logiciel 1.2x) */
+    div[data-testid="stCameraInput"] video {
+        width: 100% !important;
+        height: 600px !important; /* Hauteur augmentée pour le recul */
+        object-fit: cover !important;
+        transform: scale(1.1); /* Petit zoom pour compenser la distance de 2m */
+        filter: contrast(1.1) brightness(1.1); /* Améliore la détection des bords pour l'IA */
+    }
 
-        /* 3. Guide visuel supérieur : Badge de distance */
+    /* Viseur de précision Sniper : DEVENU PLUS PETIT ET TRANSPARENT */
         div[data-testid="stCameraInput"]::after {
-            content: "📐 CADRAGE OPTIMAL 2M";
-            position: absolute;
-            top: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(31, 119, 180, 0.80);
-            color: white;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            z-index: 15;
-            pointer-events: none;
-        }
-
-        /* 4. Viseur de précision Sniper : DEVENU PETIT ET TRANSPARENT */
-        div[data-testid="stCameraInput"]::before {
             content: "";
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 80px; height: 80px; /* Diamètre de précision réduit à 80px */
-            border: 2px dashed rgba(255, 255, 255, 0.35); /* Pointillés fins et discrets */
+            width: 80px; height: 80px; /* Réduit de moitié (160px -> 80px) */
+            border: 2px dashed rgba(255, 255, 255, 0.35); /* Pointillés fins et transparents */
             border-radius: 50%;
-            box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.25); /* Ombrage doux autour du focus central */
+            box-shadow: 0 0 0 1000px rgba(0, 0, 0, 0.25); /* Filtre d'ombrage plus doux */
+            pointer-events: none;
+        }
+        /* Point rouge de ciblage semi-transparent */
+        div[data-testid="stCameraInput"]::before {
+            content: "🎯";
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 26px; /* Légèrement plus petit */
+            opacity: 0.5; /* Rendu transparent à 50% */
             z-index: 10;
             pointer-events: none;
         }
-
-        /* 5. Bouton de capture géant pour éviter les flous de bougé au clic */
-        div[data-testid="stCameraInput"] button {
-            height: 75px !important;
-            width: 75px !important;
-            border-radius: 50% !important;
-            border: 4px solid white !important;
-            background-color: #1f77b4 !important;
-            position: absolute !important;
-            bottom: 20px !important;
-            left: 50% !important;
-            transform: translateX(-50%) !important;
-            z-index: 20;
-            opacity: 0.85;
-            transition: all 0.2s ease;
-        }
-        div[data-testid="stCameraInput"] button:active {
-            transform: translateX(-50%) scale(0.92) !important;
-        }
-        </style>
-    """, unsafe_allow_html=True)
-
-
-
 
 DB_FILE = "data_ovinstat_V16.csv"
 DB_SANTE = "data_sante_ovins.csv"
