@@ -48,9 +48,7 @@ with st.sidebar:
         st.rerun()
     
 # --- 1. CONFIGURATION INITIALE ---
-st.set_page_config(page_title="OviStat Vision Pro v2.4", page_icon="🐑", layout="wide")
-
-# --- STYLE CSS DU VISEUR (COLLÉ TOUT EN HAUT À L'INDENTATION ZÉRO) ---
+# --- STYLE CSS DU VISEUR (BOUTON DE CAPTURE REPOSITIONNÉ EN DESSOUS) ---
 st.markdown("""
 <style>
 /* 1. Grand écran pour la visée à distance */
@@ -85,26 +83,26 @@ div[data-testid="stCameraInput"]::after {
     pointer-events: none;
 }
 
-/* 4. Bouton de capture géant pour éviter les flous de bougé au clic */
+/* 4. BOUTON DE CAPTURE RELOCALISÉ SOUS LE CADRAN SANS DEBORDEMENT */
 div[data-testid="stCameraInput"] button {
     height: 75px !important;
     width: 75px !important;
     border-radius: 50% !important;
     border: 4px solid white !important;
     background-color: #1f77b4 !important;
-    position: absolute !important;
-    bottom: 20px !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
+    position: relative !important; /* Modifié de absolute à relative pour sortir du cadre */
+    margin: 15px auto !important; /* Centre automatiquement le bouton en dessous */
+    display: block !important;
     z-index: 20;
-    opacity: 0.85;
+    opacity: 0.95;
     transition: all 0.2s ease;
 }
 div[data-testid="stCameraInput"] button:active {
-    transform: translateX(-50%) scale(0.92) !important;
+    transform: scale(0.92) !important;
 }
 </style>
 """, unsafe_allow_html=True)
+
 
 
 # Couleurs dynamiques selon le mode
