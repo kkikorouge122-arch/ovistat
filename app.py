@@ -197,13 +197,19 @@ with tabs[2]:
     if not data.empty:
         target = st.selectbox("Sélectionner le sujet d'étude", data["ID"].unique(), key="sel_audit")
         anim = data[data["ID"] == target].iloc[-1]
+        
         try:
-        ic = float(anim['Poids']) / float(anim['LB']) if float(anim['LB']) > 0 else 0
-        ir = (float(anim['TP'])**2) / float(anim['HG']) if float(anim['HG']) > 0 else 0
-        c_an1, c_an2 = st.columns(2)
-        c_an1.metric("🥩 Indice de Compacité", f"{ic:.2f}")
-        c_an2.metric("🏗️ Indice de Robustesse", f"{ir:.2f}")
-       except Exception as e: st.error(f"Erreur indices : {e}")
+            # Toutes ces lignes ont été décalées de 4 espaces vers la droite
+            ic = float(anim['Poids']) / float(anim['LB']) if float(anim['LB']) > 0 else 0
+            ir = (float(anim['TP'])**2) / float(anim['HG']) if float(anim['HG']) > 0 else 0
+            
+            c_an1, c_an2 = st.columns(2)
+            c_an1.metric("🥩 Indice de Compacité", f"{ic:.2f}")
+            c_an2.metric("🏗️ Indice de Robustesse", f"{ir:.2f}")
+            
+        except Exception as e: 
+            st.error(f"Erreur indices : {e}")
+
         
     # --- ONGLET 4 : SANTÉ & SUIVI MÉDICAL ---
 with tabs[3]:
