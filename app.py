@@ -355,7 +355,7 @@ with tabs[0]:
 
     st.divider()
 
-    # C. Formulaire de Mensurations
+     # C. Formulaire de Mensurations
     with st.form("form_final"):
         st.subheader("📋 Fiche Identité & Morphométrie")
         m = st.session_state.mesures_ia
@@ -367,15 +367,19 @@ with tabs[0]:
 
         with st.expander("1️⃣ Dimensions Corporelles", expanded=True):
             g1, g2, g3, g4 = st.columns(4)
-            poids = g1.number_input("Poids (kg)", 0.0, 150.0, 0.0)
+            # 1. MODIFICATION : Remplacement du 0.0 de départ par la valeur estimée par l'IA
+            poids = g1.number_input("Poids (kg)", 0.0, 150.0, value=float(m.get("Poids", 0.0)))
             hg = g2.number_input("HG (cm)", value=float(m.get("HG", 0.0)))
             hs = g3.number_input("HS (cm)", value=float(m.get("HS", 0.0)))
             lb = g4.number_input("LB (cm)", value=float(m.get("LB", 0.0)))
             
+            # Ajout de la case LQ à l'écran pour pouvoir modifier l'estimation de l'IA
+            lq = g1.number_input("LQ (cm)", value=float(m.get("LQ", 0.0)))
+            
             # Variables de profil secondaires calculées
-            lt_t = m.get("LT_tronc", 0.0)
-            lc_c = m.get("LC_cou", 0.0)
-            lh = m.get("LH", 0.0)
+            data_lt_t = m.get("LT_tronc", 0.0)
+            data_lc_c = m.get("LC_cou", 0.0)
+            data_lh = m.get("LH", 0.0)
 
         with st.expander("2️⃣ Poitrine & Largeurs"):
             g5, g6, g7, g8 = st.columns(4)
@@ -384,7 +388,6 @@ with tabs[0]:
             pp = g7.number_input("PP (cm)", value=float(m.get("PP", 0.0)))
             tp = g8.number_input("TP (cm)", value=float(m.get("TP", 0.0)))
 
-                # --- 8 ESPACES DE DÉCALAGE POUR TOUT CE BLOC ---
         with st.expander("3️⃣ Tête & Oreilles"):
             t1, t2, t3 = st.columns(3)
             lc_cornes = t1.number_input("L. Cornes", value=float(m.get("Lc_cornes", 0.0)))
@@ -408,14 +411,14 @@ with tabs[0]:
             ration_estim = round(poids * 0.035, 2)
             r6.metric("Ration Sug. (kg)", f"{ration_estim} kg")
 
-        # CE BOUTON DOIT COMMENCER EXACTEMENT AVEC 8 ESPACES
+        # Validation avec les 8 espaces requis
         if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
             id_f = id_in if id_in else f"T-{datetime.now().strftime('%H%M%S')}"
             
-            # Construction de la ligne de données complète
+            # 2. MODIFICATION : Enregistrement des vraies variables au lieu des anciens blocs bloqués à 0.0
             row = [
                 date.today(), id_f, race_in, age_in, poids, 
-                hg, hs, lb, 0.0, lt_t, lc_c, lh, li, lp, pp, tp, 
+                hg, hs, lb, lq, data_lt_t, data_lc_c, data_lh, li, lp, pp, tp, 
                 lc_cornes, lt_tete, lt_la, lo_lo, lo_la, tc, 
                 ly, ts, ps, lg, ll, 
                 wilaya_sel, commune_sel, ration_estim
@@ -427,6 +430,7 @@ with tabs[0]:
             st.session_state.mesures_ia = {k: 0.0 for k in st.session_state.mesures_ia}
             st.success(f"✅ Animal {id_f} enregistré avec succès !")
             st.rerun()
+
 
 
 # --- ONGLET 2 : HISTORIQUE & MODIF TOTALE ---
