@@ -173,8 +173,17 @@ with st.sidebar:
 st.title("🐑 OviStat IA v2.4.6")
 tabs = st.tabs(["📥 Saisie", "🔍 Historique & Modif", "📊 Analyse", "🩺 Santé", "ℹ️ À Propos"])
 
-# --- ONTLET 1 : SAISIE PROGRESSIVE ---
-with tabs[0]:
+# --- ONGLET 1 : SAISIE ---
+if 'mesures_ia' not in st.session_state:
+    st.session_state.mesures_ia = {
+        "Poids": 0.0, "HG": 0.0, "HS": 0.0, "LB": 0.0, "LT_tronc": 0.0, "LC_cou": 0.0, "LH": 0.0, "LQ": 0.0,
+        "TP": 0.0, "LI": 0.0, "LP": 0.0, "PP": 0.0,
+        "Lc_cornes": 0.0, "LTete": 0.0, "LtTete": 0.0, "LO": 0.0, "Lo": 0.0, "TC": 0.0,
+        "LY": 0.0, "TS": 0.0, "PS": 0.0, "LG": 0.0, "LL": 0.0
+    }
+
+# --- ONGLET 1 : SCAN PROGRESSIF ---
+with tabs:
     st.subheader("📍 Localisation de l'étude")
     col_w, col_c = st.columns(2)
     wilaya_sel = col_w.selectbox("Wilaya", list_wilayas, key="w_dyn")
@@ -199,8 +208,10 @@ with tabs[0]:
                 st.session_state.step += 1
                 st.session_state.last_photo = None
                 st.rerun()
-            else: st.success("🎯 Étude morphométrique et anatomique complète !")
-        else: st.error("⚠️ Capturez d'abord l'animal avec le déclencheur circulaire.")
+            else:
+                st.success("🎯 Étude morphométrique et anatomique complète !")
+        else:
+            st.error("⚠️ Capturez l'animal d'abord avec le déclencheur circulaire.")
 
     photo = st.camera_input("Scanner l'animal", key=f"precision_cam_v4_{st.session_state.step}")
     
@@ -210,9 +221,24 @@ with tabs[0]:
         w, h = img.size
         results = model(img)
         
-               # --- APPORT CALCULS MORPHOMÉTRIQUES RÉELS (FINI LES COPIES) ---
+        target_sheep = None
+        min_dist = float('inf')
+        center_x, center_y = w / 2, h / 2
+        threshold = w * 0.20 
+        
+        for r in results:
+            for b in r.boxes:
+                if int(b.cls) == 18:
+                    x1, y1, x2, y2 = b.xyxy.tolist()
+                    m_x = (x1 + x2) / 2
+                    m_y = (y1 + y2) / 2
+                    dist = ((center_x - m_x)**2 + (center_y - m_y)**2)**0.5
+                    if dist < min_dist:
+                        min_dist = dist
+                        target_sheep = b
+
         if target_sheep and min_dist < threshold:
-            st.success("🔒 ANIMAL MAÎTRE VERROUILLÉE AU CENTRE : Extraction cm...")
+            st.success("🔒 ANIMAL MAÎTRE VERROUILLÉ AU CENTRE : Extraction cm...")
             x1, y1, x2, y2 = target_sheep.xyxy.tolist()
             pixel_width = x2 - x1
             pixel_height = y2 - y1
@@ -228,7 +254,7 @@ with tabs[0]:
                     "HG": cal_hg, "HS": cal_hs, "LB": cal_lb, "Poids": est_poids,
                     "LT_tronc": round(cal_lb * 0.58, 1), "LC_cou": round(cal_lb * 0.28, 1),
                     "LH": round(cal_lb * 0.23, 1), "LQ": 22.0
-                }) # <-- Correctement fermé ici
+                })
                 st.info(f"📈 Profil calculé : HG={cal_hg}cm | LB={cal_lb}cm | Poids Estimé={est_poids}kg")
                 
             elif st.session_state.step == 2:
@@ -238,7 +264,7 @@ with tabs[0]:
                 st.session_state.mesures_ia.update({
                     "TP": cal_tp, "LI": round(cal_larg * 0.35, 1),
                     "LP": round(cal_larg * 0.45, 1), "PP": round(pixel_height * ratio * 0.7, 1)
-                }) # <-- Correctement fermé ici
+                })
                 st.info(f"📈 Poitrine calculée : TP={cal_tp}cm")
                 
             elif st.session_state.step == 3:
@@ -248,9 +274,93 @@ with tabs[0]:
                     "Lc_cornes": 15.0, "LTete": cal_tete, "LtTete": round(cal_tete * 0.5, 1),
                     "LO": round(cal_tete * 1.1, 1), "Lo": round(cal_tete * 0.3, 1),
                     "TC": round(cal_tete * 0.38, 1), "LY": 2.5, "LL": 5.0
-                }) # <-- LA FERMETURE QUI MANQUAIT ET CRÉAIT L'ERREUR SYNTAXE
+                })
                 st.info("📈 Extrémités faciales et céphaliques calculées.")
         else:
             if target_sheep: st.error("❌ SUJET TROP EXCENTRÉ : Ajustez le viseur 🎯 sur l'ovin cible.")
             else: st.error("❌ AUCUN ANIMAL DÉTECTÉ AU CENTRE : Visez à 2 mètres.")
-S": cal_hs, "LB": cal_lb, "Poids": est_poids,
+
+    st.divider()
+
+    # --- FORMULAIRE DE MESURATIONS ---
+    with st.form("form_final"):
+        st.subheader("📋 Fiche d'Analyse d'Identité")
+        m = st.session_state.mesures_ia
+        
+        c1, c2, c3 = st.columns(3)
+        id_in = c1.text_input("ID / Boucle")
+        age_in = c2.number_input("Âge (mois)", 0, 120, 12)
+        race_in = c3.selectbox("Race", ["Ouled Djellal", "Rembi", "Hamra"])
+
+        with st.expander("1️⃣ Dimensions Corporelles", expanded=True):
+            g1, g2, g3, g4 = st.columns(4)
+            poids = g1.number_input("Poids (kg)", 0.0, 150.0, value=float(m.get("Poids", 0.0)))
+            hg = g2.number_input("HG (cm)", value=float(m.get("HG", 0.0)))
+            hs = g3.number_input("HS (cm)", value=float(m.get("HS", 0.0)))
+            lb = g4.number_input("LB (cm)", value=float(m.get("LB", 0.0)))
+            lq = g1.number_input("LQ (cm)", value=float(m.get("LQ", 0.0)))
+            
+            lt_t = m.get("LT_tronc", 0.0)
+            lc_c = m.get("LC_cou", 0.0)
+            lh = m.get("LH", 0.0)
+
+        with st.expander("2️⃣ Poitrine & Largeurs"):
+            g5, g6, g7, g8 = st.columns(4)
+            li = g5.number_input("LI (cm)", value=float(m.get("LI", 0.0)))
+            lp = g6.number_input("LP (cm)", value=float(m.get("LP", 0.0)))
+            pp = g7.number_input("PP (cm)", value=float(m.get("PP", 0.0)))
+            tp = g8.number_input("TP (cm)", value=float(m.get("TP", 0.0)))
+
+        with st.expander("3️⃣ Tête & Oreilles"):
+            t1, t2, t3 = st.columns(3)
+            lc_cornes = t1.number_input("L. Cornes (Lc cm)", value=float(m.get("Lc_cornes", 0.0)))
+            lt_tete = t2.number_input("L. Tête (LT cm)", value=float(m.get("LTete", 0.0)))
+            lt_la = t3.number_input("Larg. Tête (Lt cm)", value=float(m.get("LtTete", 0.0)))
+            lo_lo = t1.number_input("L. Oreille (LO cm)", value=float(m.get("LO", 0.0)))
+            lo_la = t2.number_input("Larg. Oreille (Lo cm)", value=float(m.get("Lo", 0.0)))
+            tc = t3.number_input("T. Canon (TC cm)", value=float(m.get("TC", 0.0)))
+
+        with st.expander("4️⃣ Reproduction & Laine"):
+            r1, r2, r3 = st.columns(3)
+            ly = r1.number_input("LY (cm)", value=float(m.get("LY", 0.0)))
+            ts = r2.number_input("TS (cm)", value=float(m.get("TS", 0.0)))
+            ps = r3.number_input("PS (cm)", value=float(m.get("PS", 0.0)))
+            r4, r5, r6 = st.columns(3)
+            lg = r4.number_input("LG (cm)", value=float(m.get("LG", 0.0)))
+            ll = r5.number_input("LL (cm)", value=float(m.get("LL", 0.0)))
+            ration_estim = round(poids * 0.035, 2)
+            r6.metric("Ration Sug. (kg)", f"{ration_estim} kg MS/j")
+
+        if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
+            id_f = id_in if id_in else f"T-{datetime.now().strftime('%H%M%S')}"
+            
+            if not data.empty:
+                try:
+                    poids_hist = pd.to_numeric(data['Poids'], errors='coerce')
+                    hg_hist = pd.to_numeric(data['HG'], errors='coerce')
+                    doublon_potentiel = data[
+                        (poids_hist.between(poids - 1.0, poids + 1.0)) &
+                        (hg_hist.between(hg - 1.0, hg + 1.0))
+                    ]
+                except:
+                    doublon_potentiel = pd.DataFrame()
+            else:
+                doublon_potentiel = pd.DataFrame()
+
+            if not doublon_potentiel.empty:
+                st.error("⚠️ ALERTE DE SÉCURITÉ : Un ovin avec des mensurations presque identiques est déjà présent dans la base.")
+            else:
+                row = [
+                    date.today(), id_f, race_in, age_in, poids, 
+                    hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp, 
+                    lc_cornes, lt_tete, lt_la, lo_lo, lo_la, tc, 
+                    ly, ts, ps, lg, ll, 
+                    wilaya_sel, commune_sel, ration_estim
+                ]
+                pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
+                
+                st.session_state.step = 1
+                st.session_state.mesures_ia = {k: 0.0 for k in st.session_state.mesures_ia}
+                st.success(f"✅ Fiche de l'animal {id_f} validée !")
+                st.rerun()
+
