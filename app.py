@@ -78,9 +78,17 @@ def login():
 
 if not st.session_state.auth: login()
 # --- 3. CONFIGURATION DES BASES DE DONNÉES & GÉO ---
+# --- CONFIGURATION DES BASES DE DONNÉES & GÉO ---
 DB_FILE = "data_ovinstat_V16.csv"
-DB_SANTE = "data_sante_ovins.csv"
-COLONNES = ["Date", "ID", "Race", "Age", "Poids", "HG", "HS", "LB", "LQ", "LT_tronc", "LC_cou", "LH", "LI", "LP", "PP", "TP", "Lcornes", "LTete", "LtTete", "LO", "Lo", "TC", "LY", "TS", "PS", "LG", "LL", "Wilaya", "Commune", "Ration"]
+DB_SANTE = "data_sante_ovins.csv"  # <-- AJOUTER CETTE LIGNE
+
+COLONNES = [
+    "Date", "ID", "Race", "Age", "Poids", 
+    "HG", "HS", "LB", "LQ", "LT_tronc", "LC_cou", "LH", "LI", "LP", "PP", "TP",
+    "Lcornes", "LTete", "LtTete", "LO", "Lo", "TC", "LY", "TS", "PS", "LG", "LL", 
+    "Wilaya", "Commune", "Ration"
+]
+COL_SANTE = ["Date", "ID", "Type", "Produit", "Veterinaire", "Prochain_RDV"]  # <-- AJOUTER CETTE LIGNE
 
 @st.cache_resource
 def load_yolo(): return YOLO('yolov8n.pt')
