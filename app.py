@@ -219,7 +219,7 @@ with tabs[0]:
         for r in results:
             for b in r.boxes:
                 if int(b.cls) == 18:
-                    x1, y1, x2, y2 = b.xyxy.tolist()
+                    x1, y1, x2, y2 = b.xyxy[0].tolist()
                     m_x = (x1 + x2) / 2
                     m_y = (y1 + y2) / 2
                     dist = ((center_x - m_x)**2 + (center_y - m_y)**2)**0.5
