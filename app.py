@@ -253,13 +253,16 @@ with tabs[0]:
             lg = r4.number_input("LG", value=float(m.get("LG", 0.0)))
             ration_estim = round(poids * 0.035, 2)
             r6.metric("Ration Sug. (kg)", f"{ration_estim} kg")
-            if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
+                   if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
             id_f = id_in if id_in else f"T-{datetime.now().strftime('%H%M%S')}"
-            row = [date.today(), id_f, race_in, age_in, poids, hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp,
-            lc_cornes, lt_tete, lt_la, lo_lo, lo_la, tc, ly, ts, ps, lg, ll, wilaya_sel, commune_sel,
-            ation_estim]
+            row = [
+                date.today(), id_f, race_in, age_in, poids, hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp,
+                lc_cornes, lt_tete, lt_la, lo_lo, lo_la, tc, ly, ts, ps, lg, ll, wilaya_sel, commune_sel,
+                ation_estim
+            ]
             pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
             st.session_state.step = 1
             st.session_state.mesures_ia = {k: 0.0 for k in st.session_state.mesures_ia}
             st.success(f"✅ Animal {id_f} enregistré !")
             st.rerun()
+
