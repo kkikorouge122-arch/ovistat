@@ -9,7 +9,7 @@ from fpdf import FPDF
 # --- 1. CONFIGURATION INITIALE ---
 st.set_page_config(page_title="OviStat Vision Pro v2.4", page_icon="🐑", layout="wide")
 
-# --- STYLE CSS DU VISEUR (COLLÉ TOUT EN HAUT À L'INDENTATION ZÉRO) ---
+# --- STYLE CSS DU VISEUR ---
 st.markdown("""
 <style>
 /* 1. Grand écran pour la visée à distance */
@@ -71,7 +71,7 @@ if 'step' not in st.session_state: st.session_state.step = 1
 if 'last_photo' not in st.session_state: st.session_state.last_photo = None
 
 def login():
-    c1, c2, c3 = st.columns()
+    c1, c2, c3 = st.columns(3)  # ✅ Corrigé : Ajout du paramètre 3
     with c2:
         st.image("https://flaticon.com", width=100)
         st.title("🛡️ Accès Sécurisé ENSV")
@@ -246,6 +246,7 @@ with tabs[0]:
         with st.expander("4️⃣ Reproduction & Laine"):
             r1, r2, r3 = st.columns(3)
             ly = r1.number_input("LY", value=float(m.get("LY", 0.0)))
+
             ts = r2.number_input("TS", value=float(m.get("TS", 0.0)))
             ps = r3.number_input("PS", value=float(m.get("PS", 0.0)))
             
