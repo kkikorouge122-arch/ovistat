@@ -82,7 +82,7 @@ if 'mesures_ia' not in st.session_state:
 
 # --- 3. SYSTÈME DE VERROUILLAGE ÉCRAN D'ACCUEIL ---
 def login():
-    c1, c2, c3 = st.columns([1, 2, 1])
+    c1, c2, c3 = st.columns()
     with c2:
         st.image("https://flaticon.com", width=120) 
         st.title("🛡️ OviStat Vision Pro")
@@ -178,7 +178,7 @@ model = load_yolo_model()
 list_wilayas, df_communes = get_algeria_geo()
 data = load_data(DB_FILE, COLONNES)
 
-# Ajout du bouton d'effacement complet dans l'expander de maintenance
+# Boton de maintenance dans l'expander de la sidebar
 with st.sidebar:
     st.divider()
     with st.expander("⚙️ MAINTENANCE"):
@@ -186,7 +186,7 @@ with st.sidebar:
             if os.path.exists(DB_FILE): os.remove(DB_FILE)
             st.rerun()
 
-# --- 6. INTERFACE DES ONGLETS SYNCHRONISÉS ---
+# --- 6. INTERFACE DES ONGLETS PRINCIPAUX ---
 tabs = st.tabs(["📥 Saisie", "🔍 Historique & Modif", "📊 Analyse", "🩺 Santé", "ℹ️ À Propos"])
 
 # --- ONGLET 0 : SAISIE ---
@@ -242,5 +242,149 @@ with tabs[0]:
                     if dist < min_dist:
                         min_dist = dist
                         target_sheep = b
-if target_sheep and min_dist < threshold:st.success("🔒 SUJET CENTRAL VERROUILLÉ : Extraction géométrique active...")x1, y1, x2, y2 = target_sheep.xyxy.tolist()pixel_width = x2 - x1pixel_height = y2 - y1ratio = 0.14if st.session_state.step == 1:cal_hg = round(pixel_height * ratio, 1)cal_lb = round(pixel_width * ratio, 1)cal_hs = round(cal_hg * 0.98, 1)est_poids = round((cal_hg * cal_lb) / 110, 1)st.session_state.mesures_ia.update({"HG": cal_hg, "HS": cal_hs, "LB": cal_lb, "Poids": est_poids,"LT_tronc": round(cal_lb * 0.58, 1), "LC_cou": round(cal_lb * 0.28, 1),"LH": round(cal_lb * 0.23, 1), "LQ": 22.0})st.info(f"📈 Gabarit Profil : HG={cal_hg}cm | LB={cal_lb}cm | Masse estimée={est_poids}kg")elif st.session_state.step == 2:cal_larg = round(pixel_width * ratio, 1)cal_tp = round((pixel_height * ratio * 2) + (cal_larg * 2), 1)st.session_state.mesures_ia.update({"TP": cal_tp, "LI": round(cal_larg * 0.35, 1),"LP": round(cal_larg * 0.45, 1), "PP": round(pixel_height * ratio * 0.7, 1)})st.info(f"📈 Volume thoracique : TP={cal_tp}cm")elif st.session_state.step == 3:cal_tete = round(pixel_height * ratio * 0.4, 1)st.session_state.mesures_ia.update({"Lc_cornes": 15.0, "LTete": cal_tete, "LtTete": round(cal_tete * 0.5, 1),"LO": round(cal_tete * 1.1, 1), "Lo": round(cal_tete * 0.3, 1),"TC": round(cal_tete * 0.38, 1), "LY": 2.5, "LL": 5.0})st.info("📈 Paramètres céphaliques et extrémités calculés.")else:if target_sheep: st.error("❌ SUJET TROP ÉLOIGNÉ DU COLLIMATEUR : Recadrez la cible sous le viseur 🎯.")else: st.error("❌ AUCUN INDIVIDU DÉTECTÉ : Stabilisez le smartphone à 2 mètres.")st.divider()with st.form("form_final"):st.subheader("📋 Fiche d'Analyse d'Identité")m = st.session_state.mesures_iac1, c2, c3 = st.columns(3)id_in = c1.text_input("ID / Boucle")age_in = c2.number_input("Âge (mois)", 0, 120, 12)race_in = c3.selectbox("Race", ["Ouled Djellal", "Rembi", "Hamra"])with st.expander("1️⃣ Dimensions Corporelles", expanded=True):g1, g2, g3, g4 = st.columns(4)poids = g1.number_input("Poids (kg)", 0.0, 150.0, value=float(m.get("Poids", 0.0)))hg = g2.number_input("HG (cm)", value=float(m.get("HG", 0.0)))hs = g3.number_input("HS (cm)", value=float(m.get("HS", 0.0)))lb = g4.number_input("LB (cm)", value=float(m.get("LB", 0.0)))lq = g1.number_input("LQ (cm)", value=float(m.get("LQ", 0.0)))lt_t = m.get("LT_tronc", 0.0)lc_c = m.get("LC_cou", 0.0)lh = m.get("LH", 0.0)with st.expander("2️⃣ Poitrine & Largeurs"):g5, g6, g7, g8 = st.columns(4)li = g5.number_input("LI (cm)", value=float(m.get("LI", 0.0)))lp = g6.number_input("LP (cm)", value=float(m.get("LP", 0.0)))pp = g7.number_input("PP (cm)", value=float(m.get("PP", 0.0)))tp = g8.number_input("TP (cm)", value=float(m.get("TP", 0.0)))with st.expander("3️⃣ Tête & Oreilles"):t1, t2, t3 = st.columns(3)lc_cornes = t1.number_input("L. Cornes (Lc cm)", value=float(m.get("Lc_cornes", 0.0)))lt_tete = t2.number_input("L. Tête (LT cm)", value=float(m.get("LTete", 0.0)))lt_la = t3.number_input("Larg. Tête (Lt cm)", value=float(m.get("LtTete", 0.0)))lo_lo = t1.number_input("L. Oreille (LO cm)", value=float(m.get("LO", 0.0)))lo_la = t2.number_input("Larg. Oreille (Lo cm)", value=float(m.get("Lo", 0.0)))tc = t3.number_input("T. Canon (TC cm)", value=float(m.get("TC", 0.0)))with st.expander("4️⃣ Reproduction & Laine"):r1, r2, r3 = st.columns(3)ly = r1.number_input("LY (cm)", value=float(m.get("LY", 0.0)))ts = r2.number_input("TS (cm)", value=float(m.get("TS", 0.0)))ps = r3.number_input("PS (cm)", value=float(m.get("PS", 0.0)))r4, r5, r6 = st.columns(3)lg = r4.number_input("LG (cm)", value=float(m.get("LG", 0.0)))ll = r5.number_input("LL (cm)", value=float(m.get("LL", 0.0)))ration_estim = round(poids * 0.035, 2)r6.metric("Ration Sug. (kg)", f"{ration_estim} kg MS/j")if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):id_f = id_in if id_in else f"T-{datetime.now().strftime('%H%M%S')}"if not data.empty:try:poids_hist = pd.to_numeric(data['Poids'], errors='coerce')hg_hist = pd.to_numeric(data['HG'], errors='coerce')doublon_potentiel = data[(poids_hist.between(poids - 1.0, poids + 1.0)) &(hg_hist.between(hg - 1.0, hg + 1.0))]except: doublon_potentiel = pd.DataFrame()else: doublon_potentiel = pd.DataFrame()if not doublon_potentiel.empty:st.error("⚠️ ALERTE : Un ovin avec des mensurations presque identiques est déjà présent dans le registre.")else:row = [date.today(), id_f, race_in, age_in, poids,hg, hs, lb, lq, lt_t, lc_c, lh, li, lp, pp, tp,lc_cornes, lt_tete, lt_la, lo_lo, lo_la, tc,ly, ts, ps, lg, ll,wilaya_sel, commune_sel, ration_estim]pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')st.session_state.step = 1st.session_state.mesures_ia = {k: 0.0 for k in st.session_state.mesures_ia}st.success(f"✅ Fiche de l'animal {id_f} ajoutée au registre !")st.rerun()--- ONGLET 1 : HISTORIQUE ---with tabs[1]:data = load_data(DB_FILE, COLONNES)st.subheader("📋 Registre d'étude des troupeaux")if not data.empty:st.dataframe(data, use_container_width=True)st.divider()id_m = st.selectbox("ID de l'ovin pour Action", data["ID"].unique(), key="sel_hist_action")if st.button(f"❌ Supprimer la fiche de {id_m}", type="primary"):data[data["ID"] != id_m].to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')st.rerun()st.download_button("📥 Télécharger la base (CSV)", data.to_csv(sep=';', index=False).encode('utf-8-sig'), "OviStat_Export.csv")--- ONGLET 2 : ANALYSE ---with tabs[2]:st.subheader("📊 Audit Morphométrique")if not data.empty:target = st.selectbox("Sélectionner le sujet d'étude", data["ID"].unique(), key="sel_audit")anim = data[data["ID"] == target].iloc[-1]try:ic = float(anim['Poids']) / float(anim['LB']) if float(anim['LB']) > 0 else 0ir = (float(anim['TP'])**2) / float(anim['HG']) if float(anim['HG']) > 0 else 0c_an1, c_an2 = st.columns(2)c_an1.metric("🥩 Indice de Compacité", f"{ic:.2f}")c_an2.metric("🏗️ Indice de Robustesse", f"{ir:.2f}")except Exception as e: st.error(f"Erreur indices : {e}")--- ONGLET 3 : SANTÉ ---with tabs[3]:st.subheader("🩺 Suivi Sanitaire")with st.form("form_sanitaire"):id_s = st.selectbox("Sélectionner l'animal", data["ID"].unique()) if not data.empty else "N/A"acte = st.text_input("Désignation du soin")if st.form_submit_button("💉 Valider l'acte"):pd.DataFrame([[date.today(), id_s, "Soin", acte, "Dr. Ahmed", date.today()]], columns=COL_SANTE).to_csv(DB_SANTE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')st.success("Soin enregistré.")
---- ONGLET 4 : À PROPOS ---with tabs[4]:st.header("ℹ️ Informations Système")st.write("OviStat Vision Pro v2.5.0 | ENSV Alger")st.write("Auteur : MERABIA KAWTHER")if st.button("🔄 Reset Scan"):st.session_state.step = 1st.session_state.mesures_ia = {k: 0.0 for k in st.session_state.mesures_ia}st.rerun()
+                    if target_sheep and min_dist < threshold:
+                        st.success("🔒 SUJET CENTRAL VERROUILLÉ : Extraction géométrique active...")
+                        x1, y1, x2, y2 = target_sheep.xyxy.tolist()
+                        pixel_width = x2 - x1
+                        pixel_height = y2 - y1
+                        ratio = 0.14
+                    if st.session_state.step == 1:
+                        cal_hg = round(pixel_height * ratio, 1)
+                        cal_lb = round(pixel_width * ratio, 1)
+                        cal_hs = round(cal_hg * 0.98, 1)
+                        est_poids = round((cal_hg * cal_lb) / 110, 1)
+                        st.session_state.mesures_ia.update({
+                        "HG": cal_hg, "HS": cal_hs,
+                        "LB": cal_lb, "Poids": est_poids,
+                        "LT_tronc": round(cal_lb * 0.58, 1),
+                        "LC_cou": round(cal_lb * 0.28, 1),
+                        "LH": round(cal_lb * 0.23, 1), 
+                        "LQ": 22.0})
+                        st.info(f"📈 Gabarit Profil : HG={cal_hg}cm | LB={cal_lb}cm | Masse estimée={est_poids}kg")
+                    elif st.session_state.step == 2:
+                        cal_larg = round(pixel_width * ratio, 1)
+                        cal_tp = round((pixel_height * ratio * 2) + (cal_larg * 2), 1)
+                        st.session_state.mesures_ia.update({
+                        "TP": cal_tp, "LI": round(cal_larg * 0.35, 1),
+                        "LP": round(cal_larg * 0.45, 1), 
+                        "PP": round(pixel_height * ratio * 0.7, 1)})
+                        st.info(f"📈 Volume thoracique : TP={cal_tp}cm")
+                    elif st.session_state.step == 3:
+                        cal_tete = round(pixel_height * ratio * 0.4, 1)
+                        st.session_state.mesures_ia.update({
+                        "Lc_cornes": 15.0,
+                        "LTete": cal_tete,
+                        "LtTete": round(cal_tete * 0.5, 1),
+                        "LO": round(cal_tete * 1.1, 1), 
+                        "Lo": round(cal_tete * 0.3, 1),
+                        "TC": round(cal_tete * 0.38, 1),
+                        "LY": 2.5, 
+                        "LL": 5.0})
+                        st.info("📈 Paramètres céphaliques et extrémités calculés.")
+                    else:if target_sheep: 
+                        st.error("❌ SUJET TROP ÉLOIGNÉ DU COLLIMATEUR : Recadrez la cible sous le viseur 🎯.")
+                    else: st.error("❌ AUCUN INDIVIDU DÉTECTÉ : Stabilisez le smartphone à 2 mètres.")
+                        st.divider()with st.form("form_final"):
+                        st.subheader("📋 Fiche d'Analyse d'Identité")
+                        m = st.session_state.mesures_ia
+                        c1, c2, c3 = st.columns(3)
+                        id_in = c1.text_input("ID / Boucle")
+                        age_in = c2.number_input("Âge (mois)", 0, 120, 12)
+                        race_in = c3.selectbox("Race", ["Ouled Djellal", "Rembi", "Hamra"])
+                    with st.expander("1️⃣ Dimensions Corporelles", expanded=True):
+                        g1, g2, g3, g4 = st.columns(4)poids = g1.number_input("Poids (kg)", 0.0, 150.0, value=float(m.get("Poids", 0.0)))
+                        hg = g2.number_input("HG (cm)", value=float(m.get("HG", 0.0)))
+                        hs = g3.number_input("HS (cm)", value=float(m.get("HS", 0.0)))
+                        lb = g4.number_input("LB (cm)", value=float(m.get("LB", 0.0)))
+                        lq = g1.number_input("LQ (cm)", value=float(m.get("LQ", 0.0)))
+                        lt_t = m.get("LT_tronc", 0.0)
+                        lc_c = m.get("LC_cou", 0.0)
+                        lh = m.get("LH", 0.0)
+                    with st.expander("2️⃣ Poitrine & Largeurs"):
+                        g5, g6, g7, g8 = st.columns(4)
+                        li = g5.number_input("LI (cm)", value=float(m.get("LI", 0.0)))
+                        lp = g6.number_input("LP (cm)", value=float(m.get("LP", 0.0)))
+                        pp = g7.number_input("PP (cm)", value=float(m.get("PP", 0.0)))
+                        tp = g8.number_input("TP (cm)", value=float(m.get("TP", 0.0)))
+                    with st.expander("3️⃣ Tête & Oreilles"):
+                        t1, t2, t3 = st.columns(3)
+                        lc_cornes = t1.number_input("L. Cornes (Lc cm)", value=float(m.get("Lc_cornes", 0.0)))
+                        lt_tete = t2.number_input("L. Tête (LT cm)", value=float(m.get("LTete", 0.0)))
+                        lt_la = t3.number_input("Larg. Tête (Lt cm)", value=float(m.get("LtTete", 0.0)))
+                        lo_lo = t1.number_input("L. Oreille (LO cm)", value=float(m.get("LO", 0.0)))
+                        lo_la = t2.number_input("Larg. Oreille (Lo cm)", value=float(m.get("Lo", 0.0)))
+                        tc = t3.number_input("T. Canon (TC cm)", value=float(m.get("TC", 0.0)))
+                    with st.expander("4️⃣ Reproduction & Laine"):
+                        r1, r2, r3 = st.columns(3)
+                        ly = r1.number_input("LY (cm)", value=float(m.get("LY", 0.0)))
+                        ts = r2.number_input("TS (cm)", value=float(m.get("TS", 0.0)))
+                        ps = r3.number_input("PS (cm)", value=float(m.get("PS", 0.0)))
+                        r4, r5, r6 = st.columns(3)
+                        lg = r4.number_input("LG (cm)", value=float(m.get("LG", 0.0)))
+                        ll = r5.number_input("LL (cm)", value=float(m.get("LL", 0.0)))
+                        ration_estim = round(poids * 0.035, 2)r6.metric("Ration Sug. (kg)", f"{ration_estim} kg MS/j")
+                    if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
+                        id_f = id_in if id_in else f"T-{datetime.now().strftime('%H%M%S')}"
+                    if not data.empty:
+                        try:
+                        poids_hist = pd.to_numeric(data['Poids'], errors='coerce')
+                        hg_hist = pd.to_numeric(data['HG'], errors='coerce')doublon_potentiel = data[
+                        (poids_hist.between(poids - 1.0, poids + 1.0)) &(hg_hist.between(hg - 1.0, hg + 1.0))]
+                    except: doublon_potentiel = pd.DataFrame()
+                else: doublon_potentiel = pd.DataFrame()
+                    if not doublon_potentiel.empty:st.error("⚠️ ALERTE : Un ovin avec des mensurations presque identiques est déjà présent dans le registre.")
+                    else:row = [date.today(), id_f, race_in, age_in, poids,hg, hs, lb, lq, 
+                                lt_t, lc_c, lh, li, lp, pp, tp,lc_cornes, lt_tete, lt_la, lo_lo, lo_la, tc,ly, ts, ps, lg, ll,
+                                wilaya_sel, commune_sel, ration_estim]
+                        pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
+                st.session_state.step = 1
+                st.session_state.mesures_ia = {k: 0.0 for k in st.session_state.mesures_ia}
+                st.success(f"✅ Fiche de l'animal {id_f} ajoutée au registre !")
+                st.rerun()
+                --- ONGLET 1 : HISTORIQUE ---
+                with tabs[1]:data = load_data(DB_FILE, COLONNES)
+                    st.subheader("📋 Registre d'étude des troupeaux")
+                if not data.empty:st.dataframe(data, use_container_width=True)
+                    st.divider()id_m = st.selectbox("ID de l'ovin pour Action", data["ID"].unique(), key="sel_hist_action")
+                if st.button(f"❌ Supprimer la fiche de {id_m}", type="primary"):
+                    data[data["ID"] != id_m].to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
+                    st.rerun()
+                    st.download_button("📥 Télécharger la base (CSV)", data.to_csv(sep=';', index=False).encode('utf-8-sig'), "OviStat_Export.csv")
+                --- ONGLET 2 : ANALYSE ---
+                with tabs[2]:
+                    st.subheader("📊 Audit Morphométrique")
+                if not data.empty:
+                   target = st.selectbox("Sélectionner le sujet d'étude", data["ID"].unique(), key="sel_audit")
+                    anim = data[data["ID"] == target].iloc[-1]
+                 try:
+                     ic = float(anim['Poids']) / float(anim['LB']) 
+                if float(anim['LB']) > 0 
+                else 0ir = (float(anim['TP'])**2) / float(anim['HG'])
+                if float(anim['HG']) > 0 
+                else 0c_an1, c_an2 = st.columns(2)
+                  c_an1.metric("🥩 Indice de Compacité", f"{ic:.2f}")
+                  c_an2.metric("🏗️ Indice de Robustesse", f"{ir:.2f}")
+                except Exception as e: st.error(f"Erreur indices : {e}")
+          --- ONGLET 3 : SANTÉ ---
+                with tabs[3]:
+                    st.subheader("🩺 Suivi Sanitaire")
+                with st.form("form_sanitaire"):
+                    id_s = st.selectbox("Sélectionner l'animal", data["ID"].unique())
+                if not data.empty 
+                else "N/A"
+                   acte = st.text_input("Désignation du soin")
+                if st.form_submit_button("💉 Valider l'acte"):
+                    pd.DataFrame([[date.today(), id_s, "Soin", acte, "Dr. Ahmed", date.today()]],
+                    columns=COL_SANTE).to_csv(DB_SANTE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
+                    st.success("Soin enregistré.")
+                --- ONGLET 4 : À PROPOS ---
+                with tabs[4]:
+                    st.header("ℹ️ Informations Système")
+                    st.write("OviStat Vision Pro v2.5.0 | ENSV Alger")
+                    st.write("Auteur : MERABIA KAWTHER")
+                if st.button("🔄 Reset Scan"):
+                    st.session_state.step = 1
+                    st.session_state.mesures_ia = {k: 0.0 for k in st.session_state.mesures_ia}
+                    st.rerun()
+
+                        
