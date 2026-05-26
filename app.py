@@ -8,7 +8,16 @@ from PIL import Image
 from fpdf import FPDF
 # --- 1. CONFIGURATION & SÉCURITÉ ---
 st.set_page_config(page_title="OviStat Vision Pro v2.4", page_icon="🐑", layout="wide")
+# --- ALGORITHME ANTI-DOUBLON MORPHOMÉTRIQUE ---
+# Le code cherche si un profil similaire existe déjà dans l'historique
+doublon_potentiel = data[
+    (data['Poids'].between(poids - 0.5, poids + 0.5)) &
+    (data['HG'].between(hg - 1.0, hg + 1.0)) &
+    (data['LB'].between(lb - 1.0, lb + 1.0))
+]
 
+if not doublon_potentiel.empty:
+    st.error("⚠️ ATTENTION : Un ovin avec des mensurations quasi-identiques existe déjà dans la base. Êtes-vous sûr de ne pas avoir déjà scanné cet animal ?")
 if 'auth' not in st.session_state: st.session_state.auth = False
 if 'step' not in st.session_state: st.session_state.step = 1
 if 'last_photo' not in st.session_state: st.session_state.last_photo = None
@@ -48,7 +57,7 @@ with st.sidebar:
         st.rerun()
     
 # --- 1. CONFIGURATION INITIALE ---
-# --- STYLE CSS DU VISEUR (BOUTON DE CAPTURE REPOSITIONNÉ EN DESSOUS) ---
+
 st.markdown("""
 <style>
 /* 1. Grand écran pour la visée à distance */
