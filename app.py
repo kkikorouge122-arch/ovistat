@@ -285,7 +285,8 @@ with tabs[0]:
                     else:
                      if target_sheep: 
                        st.error("❌ SUJET TROP ÉLOIGNÉ DU COLLIMATEUR : Recadrez la cible sous le viseur 🎯.")
-                    else: st.error("❌ AUCUN INDIVIDU DÉTECTÉ : Stabilisez le smartphone à 2 mètres.")
+                    else: 
+                        st.error("❌ AUCUN INDIVIDU DÉTECTÉ : Stabilisez le smartphone à 2 mètres.")
                         st.divider()with st.form("form_final"):
                         st.subheader("📋 Fiche d'Analyse d'Identité")
                         m = st.session_state.mesures_ia
