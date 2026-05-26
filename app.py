@@ -79,6 +79,7 @@ def login():
 if not st.session_state.auth: login()
 # --- 3. CONFIGURATION DES BASES DE DONNÉES & GÉO ---
 DB_FILE = "data_ovinstat_V16.csv"
+DB_SANTE = "data_sante_ovins.csv"
 COLONNES = ["Date", "ID", "Race", "Age", "Poids", "HG", "HS", "LB", "LQ", "LT_tronc", "LC_cou", "LH", "LI", "LP", "PP", "TP", "Lcornes", "LTete", "LtTete", "LO", "Lo", "TC", "LY", "TS", "PS", "LG", "LL", "Wilaya", "Commune", "Ration"]
 
 @st.cache_resource
@@ -109,6 +110,11 @@ def load_data(file, cols):
         try: return pd.read_csv(file, sep=';', encoding='utf-8-sig', on_bad_lines='skip')
         except: return pd.DataFrame(columns=cols)
     return pd.DataFrame(columns=cols)
+
+# Initialisation des fichiers
+for f, c in zip([DB_FILE, DB_SANTE], [COLONNES, COL_SANTE]):
+    if not os.path.exists(f) or os.path.getsize(f) == 0:
+        pd.DataFrame(columns=c).to_csv(f, index=False, sep=';', encoding='utf-8-sig')
 
 
 model = load_yolo_model()
