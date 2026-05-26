@@ -282,7 +282,8 @@ with tabs[0]:
                         "LL": 5.0})
                         st.info("📈 Paramètres céphaliques et extrémités calculés.")
                         
-                    else:if target_sheep: 
+                    else:
+                     if target_sheep: 
                        st.error("❌ SUJET TROP ÉLOIGNÉ DU COLLIMATEUR : Recadrez la cible sous le viseur 🎯.")
                     else: st.error("❌ AUCUN INDIVIDU DÉTECTÉ : Stabilisez le smartphone à 2 mètres.")
                         st.divider()with st.form("form_final"):
