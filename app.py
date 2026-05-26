@@ -269,7 +269,7 @@ with tabs[0]:
             st.session_state.mesures_ia = {k: 0.0 for k in st.session_state.mesures_ia}
             st.success(f"✅ Animal {id_f} enregistré !")
             st.rerun()
---- ONGLET 2 : HISTORIQUE ---
+# --- ONGLET 2 : HISTORIQUE ---
 with tabs[1]:
     data = pd.read_csv(DB_FILE, sep=';')
     if not data.empty:
@@ -278,3 +278,4 @@ with tabs[1]:
         if st.button(f"❌ Supprimer {id_m}"):
             data[data["ID"]!=id_m].to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
             st.rerun()
+
