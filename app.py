@@ -243,18 +243,16 @@ with tabs[0]:
             lo_la = t2.number_input("Larg. Oreille (Lo)", value=float(m.get("Lo", 0.0)))
             tc = t3.number_input("T. Canon (TC)", value=float(m.get("TC", 0.0)))
 
-            with st.expander("4️⃣ Reproduction & Laine"):
-        r1, r2, r3 = st.columns(3)
-        ly = r1.number_input("LY", value=float(m.get("LY", 0.0)))
-        ts = r2.number_input("TS", value=float(m.get("TS", 0.0)))
-        ps = r3.number_input("PS", value=float(m.get("PS", 0.0)))
-        
-        r4, r5, r6 = st.columns(3)
-        lg = r4.number_input("LG", value=float(m.get("LG", 0.0)))
-        ll = r5.number_input("LL", value=float(m.get("LL", 0.0)))  # Corrigé ici (était lg en r4)
-        
-        ration_estim = round(poids * 0.035, 2)
-        r6.metric("Ration Sug. (kg)", f"{ration_estim} kg")
+     with st.expander("4️⃣ Reproduction & Laine"):
+           r1, r2, r3 = st.columns(3)
+           ly = r1.number_input("LY", value=float(m.get("LY", 0.0)))
+           ts = r2.number_input("TS", value=float(m.get("TS", 0.0)))
+           ps = r3.number_input("PS", value=float(m.get("PS", 0.0)))
+           r4, r5, r6 = st.columns(3)
+           lg = r4.number_input("LG", value=float(m.get("LG", 0.0)))
+           ll = r5.number_input("LL", value=float(m.get("LL", 0.0)))  # Corrigé ici (était lg en r4)
+            ration_estim = round(poids * 0.035, 2)
+           r6.metric("Ration Sug. (kg)", f"{ration_estim} kg")
         
         if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
             id_f = id_in if id_in else f"T-{datetime.now().strftime('%H%M%S')}"
