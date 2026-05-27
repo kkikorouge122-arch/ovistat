@@ -148,8 +148,7 @@ for f, c in zip([DB_FILE, DB_SANTE], [COLONNES, COL_SANTE]):
         pd.DataFrame(columns=c).to_csv(f, index=False, sep=';', encoding='utf-8-sig')
 
 model = load_yolo_model()
-TV_LARGEUR_REELLE_CM = 95.5  # Largeur de votre TV sur le mur
-TV_HAUTEUR_REELLE_CM = 55.2   # Hauteur de votre TV sur le mur
+
 if 'mode_calibration_tv' not in st.session_state:
     st.session_state.mode_calibration_tv = False
 
@@ -158,6 +157,13 @@ st.session_state.mode_calibration_tv = st.sidebar.toggle(
     "🔬 Mode Étalon TV Mural", 
     value=st.session_state.mode_calibration_tv
 )
+
+# Si l'interrupteur est activé, on affiche les curseurs de réglage libre
+if st.session_state.mode_calibration_tv:
+    st.sidebar.write("📐 Ajustez les dimensions réelles de l'objet :")
+    TV_LARGEUR_REELLE_CM = st.sidebar.slider("Largeur réelle (cm)", 30.0, 200.0, 102.5, step=0.5)
+    TV_HAUTEUR_REELLE_CM = st.sidebar.slider("Hauteur réelle (cm)", 20.0, 150.0, 58.2, step=0.5)
+
 
 list_wilayas, df_communes = get_algeria_geo()
 data = load_data(DB_FILE, COLONNES)
