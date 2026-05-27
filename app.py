@@ -387,7 +387,7 @@ with tabs[0]:
                             (poids_hist.between(poids - 1.0, poids + 1.0)) & 
                             (hg_hist.between(hg - 1.0, hg + 1.0))
                         ]
-                except:
+              except:
                     doublon_potentiel = pd.DataFrame()
                     
             if not doublon_potentiel.empty:
