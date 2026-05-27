@@ -376,6 +376,7 @@ with tabs[0]:
 with tabs[1]:
     st.subheader("📋 Gestion de la base de données")
     data = load_data(DB_FILE, COLONNES)
+    
     if not data.empty:
         st.dataframe(data, use_container_width=True)
         st.divider()
@@ -399,21 +400,47 @@ with tabs[1]:
                         new_vals[col] = tgt.number_input(col, value=float(data.at[idx, col]))
                 
                 if st.form_submit_button("💾 Sauvegarder les modifications"):
-                    for k, v in new_vals.items(): data.at[idx, k] = v
+                    for k, v in new_vals.items(): 
+                        data.at[idx, k] = v
                     data.to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
-                    st.success("Mise à jour réussie !"); st.rerun()
+                    st.success("Mise à jour réussie !")
+                    st.rerun()
         
-        st.download_button("📥 Export Excel", data.to_csv(sep=';', index=False).encode('utf-8-sig'), "base.csv")
+        # --- FIX EXCEL PRO : Forcer le tableur à appliquer les colonnes au clic ---
+        csv_brut = data.to_csv(sep=';', index=False, encoding='utf-8-sig')
+        csv_pour_excel = "sep=;\n" + csv_brut
+        
+        st.download_button(
+            label="📥 Export Excel (Colonnes alignées)", 
+            data=csv_pour_excel.encode('utf-8-sig'), 
+            file_name=f"OviStat_Export_{date.today()}.csv",
+            mime="text/csv"
+        )
     else:
         st.info("La base est vide.")
-        # --- ONGLET 3 : ANALYSE ---
+
+# --- ONGLET 3 : ANALYSE ---
 with tabs[2]:
     st.header("📊 Analyse des Performances")
-    if not data.empty:
-        target = st.selectbox("Animal pour audit", data["ID"].unique(), key="ana_sel")
-        anim = data[data["ID"] == target].iloc[-1]
-        ic = anim['Poids'] / anim['LB'] if anim['LB'] > 0 else 0
+    # Relecture rapide de sécurité pour l'onglet 3 au cas où l'onglet 2 était initialement vide
+    data_analyse = load_data(DB_FILE, COLONNES)
+    
+    if not data_analyse.empty:
+        target = st.selectbox("Animal pour audit", data_analyse["ID"].unique(), key="ana_sel")
+        anim = data_analyse[data_analyse["ID"] == target].iloc[-1]
+        
+        # Sécurisation des calculs numériques
+        try:
+            poids_val = float(anim['Poids'])
+            lb_val = float(anim['LB'])
+            ic = poids_val / lb_val if lb_val > 0 else 0
+        except:
+            ic = 0
+            
         st.metric("Indice Viande", f"{ic:.2f}")
+    else:
+        st.info("Aucune donnée disponible pour l'analyse. Enregistrez un animal d'abord.")
+
  # --- ONGLET 4 : SANTÉ & SUIVI MÉDICAL ---
 with tabs[3]:
     st.header("🩺 Carnet de Santé Numérique")
