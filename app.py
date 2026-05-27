@@ -226,7 +226,13 @@ with tabs[0]:
         min_dist = float('inf')
         center_x, center_y = w / 2, h / 2
         threshold = w * 0.20 
+       # 📺 Choix automatique de la cible : 62 pour la TV, 18 pour le mouton
+        classe_cible = 62 if st.session_state.mode_calibration_tv else 18
         
+        for r in results:
+            for b in r.boxes:
+                if int(b.cls) == classe_cible:
+
         for r in results:
             for b in r.boxes:
                 if int(b.cls) == 18:
