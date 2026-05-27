@@ -233,7 +233,6 @@ with tabs[0]:
             for b in r.boxes:
                 if int(b.cls) == classe_cible:
 
-
         for r in results:
             for b in r.boxes:
                 if int(b.cls) == 18:
