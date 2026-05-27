@@ -378,17 +378,18 @@ with tabs[0]:
             else:
                 doublon_potentiel = pd.DataFrame()
                 if os.path.exists(DB_FILE):
-                try:
-                    data_check = pd.read_csv(DB_FILE, sep=';', encoding='utf-8-sig')
-                    if not data_check.empty:
-                        poids_hist = pd.to_numeric(data_check['Poids'], errors='coerce')
-                        hg_hist = pd.to_numeric(data_check['HG'], errors='coerce')
-                        doublon_potentiel = data_check[
-                            (poids_hist.between(poids - 1.0, poids + 1.0)) & 
-                            (hg_hist.between(hg - 1.0, hg + 1.0))
-                        ]
-                except:
-                    doublon_potentiel = pd.DataFrame()
+                    try:
+                        data_check = pd.read_csv(DB_FILE, sep=';', encoding='utf-8-sig')
+                        if not data_check.empty:
+                            poids_hist = pd.to_numeric(data_check['Poids'], errors='coerce')
+                            hg_hist = pd.to_numeric(data_check['HG'], errors='coerce')
+                            doublon_potentiel = data_check[
+                                (poids_hist.between(poids - 1.0, poids + 1.0)) & 
+                                (hg_hist.between(hg - 1.0, hg + 1.0))
+                            ]
+                    except:
+                        doublon_potentiel = pd.DataFrame()
+
 
                     
             if not doublon_potentiel.empty:
