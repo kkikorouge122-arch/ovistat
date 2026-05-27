@@ -373,7 +373,7 @@ with tabs[0]:
                 st.rerun()
 
 # --- ONGLET 2 : HISTORIQUE DE TERRAIN ---
-with tabs[1]:
+with tabs:
     st.subheader("📋 Gestion de la base de données")
     data = load_data(DB_FILE, COLONNES)
     
@@ -386,27 +386,80 @@ with tabs[1]:
         c_act1, c_act2 = st.columns(2)
         if c_act1.button(f"❌ Supprimer définitivement {id_m}"):
             data[data["ID"] != id_m].to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
+            st.success("Fiche supprimée avec succès.")
             st.rerun()
 
         if c_act2.checkbox(f"📝 Modifier TOUTES les données de {id_m}"):
             with st.form("edit_all"):
                 new_vals = {}
                 ce1, ce2 = st.columns(2)
+                
+                # Parcours sécurisé de toutes les colonnes à modifier
                 for i, col in enumerate(COLONNES[2:]):
                     tgt = ce1 if i % 2 == 0 else ce2
-                    if col in ["Race", "Wilaya", "Commune"]: 
-                        new_vals[col] = tgt.text_input(col, value=str(data.at[idx, col]))
-                    else: 
-                        new_vals[col] = tgt.number_input(col, value=float(data.at[idx, col]))
+                    valeur_actuelle = data.at[idx, col]
+                    
+                    # 1️⃣ MENUS DÉROULANTS FERMÉS POUR LES TEXTES (Saisie libre interdite)
+                    if col == "Race":
+                        new_vals[col] = tgt.selectbox(col, ["Ouled Djellal", "Rembi", "Hamra"], index=["Ouled Djellal", "Rembi", "Hamra"].index(str(valeur_actuelle)) if str(valeur_actuelle) in ["Ouled Djellal", "Rembi", "Hamra"] else 0)
+                    elif col == "Wilaya":
+                        new_vals[col] = tgt.selectbox(col, list_wilayas, index=list_wilayas.index(str(valeur_actuelle)) if str(valeur_actuelle) in list_wilayas else 0)
+                    elif col == "Commune":
+                        # On réutilise les communes possibles de la géographie locale pour la sécurité
+                        w_actuelle = str(data.at[idx, "Wilaya"]).split("-")[-1].strip()
+                        mask_c = df_communes['wilaya_name'].str.strip().str.lower() == w_actuelle.lower()
+                        c_list = sorted(df_communes[mask_c]['commune_name'].unique().tolist())
+                        if c_list:
+                            new_vals[col] = tgt.selectbox(col, c_list, index=c_list.index(str(valeur_actuelle)) if str(valeur_actuelle) in c_list else 0)
+                        else:
+                            new_vals[col] = tgt.text_input(col, value=str(valeur_actuelle))
+                    elif col == "Age":
+                        new_vals[col] = tgt.number_input(col, min_value=0, max_value=120, value=int(valeur_actuelle))
+                    else:
+                        # 2️⃣ SAISIE DES MESURES NUMÉRIQUES
+                        new_vals[col] = tgt.number_input(col, value=float(valeur_actuelle))
                 
+                # Traitement à la soumission du formulaire de modification
                 if st.form_submit_button("💾 Sauvegarder les modifications"):
-                    for k, v in new_vals.items(): 
-                        data.at[idx, k] = v
-                    data.to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
-                    st.success("Mise à jour réussie !")
-                    st.rerun()
+                    # 3️⃣ BARRIÈRE BIOLOGIQUE STRICTE LORS DE LA MODIFICATION
+                    poids_m = float(new_vals.get("Poids", 0))
+                    hg_m = float(new_vals.get("HG", 0))
+                    lb_m = float(new_vals.get("LB", 0))
+                    tp_m = float(new_vals.get("TP", 0))
+                    
+                    erreurs_mod = []
+                    if not (1.0 <= poids_m <= 180.0): 
+                        erreurs_mod.append(f"Poids incohérent ({poids_m} kg). Plage [1 - 180].")
+                    if not (30.0 <= hg_m <= 120.0): 
+                        erreurs_mod.append(f"Hauteur garrot (HG) suspecte ({hg_m} cm). Plage [30 - 120].")
+                    if not (30.0 <= lb_m <= 140.0): 
+                        erreurs_mod.append(f"Longueur bassin (LB) suspecte ({lb_m} cm). Plage [30 - 140].")
+                    if not (40.0 <= tp_m <= 160.0): 
+                        erreurs_mod.append(f"Tour poitrine (TP) suspect ({tp_m} cm). Plage [40 - 160].")
+                    
+                    if erreurs_mod:
+                        st.error("🛑 MODIFICATION REFUSÉE : Des données aberrantes empêchent la mise à jour.")
+                        for err in erreurs_mod:
+                            st.warning(f"🔹 {err}")
+                    else:
+                        # Application et forçage strict du type de chaque champ avant écriture
+                        for k, v in new_vals.items():
+                            if k in ["Race", "Wilaya", "Commune"]:
+                                data.at[idx, k] = str(v).strip()
+                            elif k == "Age":
+                                data.at[idx, k] = int(v)
+                            else:
+                                data.at[idx, k] = float(v)
+                                
+                        # Recalcul automatique de la ration suggérée liée au nouveau poids modifié
+                        data.at[idx, "Ration"] = round(float(new_vals["Poids"]) * 0.035, 2)
+                        
+                        # Sauvegarde définitive au format Excel point-virgule
+                        data.to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
+                        st.success("🎉 Base de données mise à jour avec succès et vérifiée !")
+                        st.rerun()
         
-        # --- FIX EXCEL PRO : Forcer le tableur à appliquer les colonnes au clic ---
+        # --- EXPORT EXCEL AUTOMATIQUE ---
         csv_brut = data.to_csv(sep=';', index=False, encoding='utf-8-sig')
         csv_pour_excel = "sep=;\n" + csv_brut
         
@@ -418,6 +471,7 @@ with tabs[1]:
         )
     else:
         st.info("La base est vide.")
+
 
 # --- ONGLET 3 : ANALYSE ---
 with tabs[2]:
