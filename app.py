@@ -184,11 +184,12 @@ with st.sidebar:
 st.title("🐑 OviStat IA v2.4.6")
 tabs = st.tabs(["📥 Saisie", "🔍 Historique & Modif", "📊 Analyse", "🩺 Santé", "ℹ️ À Propos"])
 
-# --- ONTLET 1 : SAISIE PROGRESSIVE ---
+# --- ONGLET 1 : SAISIE ---
 with tabs[0]:
     st.subheader("📍 Localisation de l'étude")
     col_w, col_c = st.columns(2)
     wilaya_sel = col_w.selectbox("Wilaya", list_wilayas, key="w_dyn")
+    
     w_clean = wilaya_sel.split("-")[-1].strip()
     mask = df_communes['wilaya_name'].str.strip().str.lower() == w_clean.lower()
     communes_possibles = df_communes[mask]['commune_name'].unique().tolist()
@@ -202,7 +203,6 @@ with tabs[0]:
     st.divider()
     
     st.write(f"### 📸 Étape {st.session_state.step}/3 : {['Profil', 'Dessus', 'Tête'][st.session_state.step-1]}")
-    st.caption("💡 Centrez précisément la silhouette de l'ovin sous le collimateur circulaire discret.")
     
     if st.button(f"✅ VALIDER LA PHOTO {st.session_state.step}", type="primary", use_container_width=True):
         if st.session_state.last_photo:
@@ -210,8 +210,10 @@ with tabs[0]:
                 st.session_state.step += 1
                 st.session_state.last_photo = None
                 st.rerun()
-            else: st.success("🎯 Étude morphométrique et anatomique complète !")
-        else: st.error("⚠️ Capturez d'abord l'animal avec le déclencheur circulaire.")
+            else:
+                st.success("🎯 Étude morphométrique complète !")
+        else:
+            st.error("⚠️ Capturez l'animal d'abord avec le bouton cercle.")
 
     photo = st.camera_input("Scanner l'animal", key=f"precision_cam_v4_{st.session_state.step}")
     
@@ -232,15 +234,6 @@ with tabs[0]:
         for r in results:
             for b in r.boxes:
                 if int(b.cls) == classe_cible:
-
-
-
-
-
-
-        for r in results:
-            for b in r.boxes:
-                if int(b.cls) == 18:
                     x1, y1, x2, y2 = b.xyxy[0].tolist()
                     m_x = (x1 + x2) / 2
                     m_y = (y1 + y2) / 2
@@ -249,13 +242,20 @@ with tabs[0]:
                         min_dist = dist
                         target_sheep = b
 
-                # --- APPORT CALCULS MORPHOMÉTRIQUES RÉELS (FINI LES COPIES) ---
+        # --- APPORT CALCULS MORPHOMÉTRIQUES RÉELS ---
         if target_sheep and min_dist < threshold:
-            st.success("🔒 CIBLE CENTRALE VERROUILLÉE : Calcul de l'anatomie réelle...")
-            x1, y1, x2, y2 = target_sheep.xyxy[0].tolist()  # 2ème correction ici
+            st.success("🔒 ÉTALON TV VERROUILLÉ" if st.session_state.mode_calibration_tv else "🔒 ANIMAL MAÎTRE VERROUILLÉ AU CENTRE : Extraction cm...")
+            x1, y1, x2, y2 = target_sheep.xyxy[0].tolist()
             pixel_width = x2 - x1
             pixel_height = y2 - y1
-            ratio = 0.14
+            
+            if st.session_state.mode_calibration_tv:
+                ratio_horizontal = TV_LARGEUR_REELLE_CM / pixel_width
+                ratio_vertical = TV_HAUTEUR_REELLE_CM / pixel_height
+                ratio = round((ratio_horizontal + ratio_vertical) / 2, 4)
+                st.sidebar.metric("Ratio Optique Mesuré (cm/px)", f"{ratio}")
+            else:
+                ratio = 0.14
             
             if st.session_state.step == 1:
                 cal_hg = round(pixel_height * ratio, 1)
@@ -288,13 +288,13 @@ with tabs[0]:
                 })
                 st.info("📈 Extrémités faciales et céphaliques calculées.")
         else:
-            if target_sheep: 
-                st.error("❌ SUJET TROP EXCENTRÉ : Ajustez le viseur 🎯 sur l'ovin cible.")
-            else: 
+            if target_sheep:
+                st.error("❌ SUJET TROP EXCENTRÉ : Ajustez le viseur 🎯.")
+            else:
                 st.error("❌ AUCUN ANIMAL DÉTECTÉ AU CENTRE : Visez à 2 mètres.")
                 
-        st.divider()
-    # --- C. LE FORMULAIRE GLOBAL DE SYNTHÈSE ---
+    st.divider()
+
     with st.form("form_final"):
         st.subheader("📋 Fiche d'Analyse d'Identité")
         m = st.session_state.mesures_ia
@@ -344,19 +344,46 @@ with tabs[0]:
             ration_estim = round(poids * 0.035, 2)
             r6.metric("Ration Sug. (kg)", f"{ration_estim} kg MS/j")
             
-               # Validation alignée à 8 espaces exacts du bord
         if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
-            id_f = id_in if id_in else f"T-{datetime.now().strftime('%H%M%S')}"
-            
-            # 🔍 PROTECTION CONSOLIDÉE CONTRE LES VALUEERROR DU FICHIER CSV
-            doublon_potentiel = pd.DataFrame()
-            if os.path.exists(DB_FILE):
-                try:
-                    data_check = pd.read_csv(DB_FILE, sep=';', encoding='utf-8-sig')
-                    if not data_check.empty:
-                        poids_hist = pd.to_numeric(data_check['Poids'], errors='coerce')
-                        hg_hist = pd.to_numeric(data_check['HG'], errors='coerce')
-                        doublon_potentiel = data_check[
+            id_f = id_in.strip().upper() if id_in.strip() else f"T-{datetime.now().strftime('%H%M%S')}"
+            race_clean = race_in.strip().title()
+            wilaya_clean = wilaya_sel.strip()
+            commune_clean = commune_sel.strip()
+
+            try:
+                poids = float(poids)
+                hg = float(hg)
+                hs = float(hs)
+                lb = float(lb)
+                lq = float(lq)
+                tp = float(tp)
+            except (ValueError, TypeError):
+                st.error("❌ ERREUR DE TYPE : Une ou plusieurs mesures contiennent des caractères invalides.")
+                st.stop()
+
+            erreurs_validation = []
+            if not (1.0 <= poids <= 180.0): 
+                erreurs_validation.append(f"Poids incohérent ({poids} kg). Plage [1 - 180].")
+            if not (30.0 <= hg <= 120.0): 
+                erreurs_validation.append(f"Hauteur au garrot (HG) suspecte ({hg} cm). Plage [30 - 120].")
+            if not (30.0 <= lb <= 140.0): 
+                erreurs_validation.append(f"Longueur du bassin (LB) suspecte ({lb} cm). Plage [30 - 140].")
+            if not (40.0 <= tp <= 160.0): 
+                erreurs_validation.append(f"Tour de poitrine (TP) suspect ({tp} cm). Plage [40 - 160].")
+
+            if erreurs_validation:
+                st.error("🛑 ENREGISTRER BLOQUÉ : Données biologiquement impossibles détectées !")
+                for err in erreurs_validation:
+                    st.warning(f"🔹 {err}")
+            else:
+                doublon_potentiel = pd.DataFrame()
+                if os.path.exists(DB_FILE):
+                    try:
+                        data_check = pd.read_csv(DB_FILE, sep=';', encoding='utf-8-sig')
+                        if not data_check.empty:
+                            poids_hist = pd.to_numeric(data_check['Poids'], errors='coerce')
+                            hg_hist = pd.to_numeric(data_check['HG'], errors='coerce')
+                            doublon_potentiel = data_check[
                             (poids_hist.between(poids - 1.0, poids + 1.0)) & 
                             (hg_hist.between(hg - 1.0, hg + 1.0))
                         ]
