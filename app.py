@@ -551,4 +551,14 @@ with st.expander("⚙️ MAINTENANCE SYSTÈME"):
         if os.path.exists(DB_SANTE): os.remove(DB_SANTE)
         st.success("Serveur nettoyé !"); st.rerun()
     st.info(f"📍 Chemin serveur : {os.getcwd()}")
+# 🛠️ SCRIPT DE SECOURS TEMPORAIRE (À supprimer après une exécution)
+if os.path.exists(DB_FILE):
+    try:
+        # Tente de lire si le fichier est mal séparé (par des virgules)
+        df_recup = pd.read_csv(DB_FILE, sep=None, engine='python', encoding='utf-8-sig')
+        # Réenregistre proprement avec des points-virgules
+        df_recup.to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
+        st.sidebar.success("🎉 Base de données nettoyée et convertie en colonnes Excel !")
+    except Exception as e:
+        st.sidebar.error(f"Erreur nettoyage : {e}")
 
