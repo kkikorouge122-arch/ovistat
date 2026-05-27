@@ -373,8 +373,9 @@ with tabs[0]:
                 st.rerun()
 
 # --- ONGLET 2 : HISTORIQUE DE TERRAIN ---
-with tabs:
+with tabs[1]:  #  Ajout de [1] pour cibler le deuxième onglet
     st.subheader("📋 Gestion de la base de données")
+
     data = load_data(DB_FILE, COLONNES)
     
     if not data.empty:
