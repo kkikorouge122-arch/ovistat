@@ -215,7 +215,7 @@ with tabs[0]:
 
     photo = st.camera_input("Scanner l'animal", key=f"precision_cam_v4_{st.session_state.step}")
     
-            if photo:
+    if photo:
         st.session_state.last_photo = photo
         img = Image.open(photo)
         w, h = img.size
@@ -232,6 +232,7 @@ with tabs[0]:
         for r in results:
             for b in r.boxes:
                 if int(b.cls) == classe_cible:
+
 
 
 
