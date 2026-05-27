@@ -148,6 +148,9 @@ for f, c in zip([DB_FILE, DB_SANTE], [COLONNES, COL_SANTE]):
         pd.DataFrame(columns=c).to_csv(f, index=False, sep=';', encoding='utf-8-sig')
 
 model = load_yolo_model()
+TV_LARGEUR_REELLE_CM = 95.5  # Largeur de votre TV sur le mur
+TV_HAUTEUR_REELLE_CM = 55.2   # Hauteur de votre TV sur le mur
+
 list_wilayas, df_communes = get_algeria_geo()
 data = load_data(DB_FILE, COLONNES)
 
