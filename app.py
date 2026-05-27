@@ -215,23 +215,24 @@ with tabs[0]:
 
     photo = st.camera_input("Scanner l'animal", key=f"precision_cam_v4_{st.session_state.step}")
     
-    if photo:
+        if photo:
         st.session_state.last_photo = photo
         img = Image.open(photo)
         w, h = img.size
         results = model(img)
         
-        # --- ALGORITHME TARGET LOCK SÉLECTIF ---
+        # 📺 Choix automatique de la cible : 62 pour la TV, 18 pour le mouton
+        classe_cible = 62 if st.session_state.mode_calibration_tv else 18
+        
         target_sheep = None
         min_dist = float('inf')
         center_x, center_y = w / 2, h / 2
-        threshold = w * 0.20 
-          # 📺 Choix automatique de la cible : 62 pour la TV, 18 pour le mouton
-        classe_cible = 62 if st.session_state.mode_calibration_tv else 18
+        threshold = w * 0.20
         
         for r in results:
             for b in r.boxes:
                 if int(b.cls) == classe_cible:
+
 
 
 
