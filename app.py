@@ -229,8 +229,8 @@ with tabs[0]:
 
                 # --- APPORT CALCULS MORPHOMÉTRIQUES RÉELS (FINI LES COPIES) ---
         if target_sheep and min_dist < threshold:
-            st.success("🔒 ANIMAL MAÎTRE VERROUILLÉ AU CENTRE : Extraction cm...")
-            x1, y1, x2, y2 = target_sheep.xyxy.tolist()
+            st.success("🔒 CIBLE CENTRALE VERROUILLÉE : Calcul de l'anatomie réelle...")
+            x1, y1, x2, y2 = target_sheep.xyxy[0].tolist()  # 2ème correction ici
             pixel_width = x2 - x1
             pixel_height = y2 - y1
             ratio = 0.14
