@@ -322,7 +322,7 @@ with tabs[0]:
             ration_estim = round(poids * 0.035, 2)
             r6.metric("Ration Sug. (kg)", f"{ration_estim} kg MS/j")
             
-        # Validation alignée à 8 espaces exacts du bord
+               # Validation alignée à 8 espaces exacts du bord
         if st.form_submit_button("💾 ENREGISTRER LA FICHE COMPLÈTE"):
             id_f = id_in if id_in else f"T-{datetime.now().strftime('%H%M%S')}"
             
@@ -330,7 +330,7 @@ with tabs[0]:
             doublon_potentiel = pd.DataFrame()
             if os.path.exists(DB_FILE):
                 try:
-                    data_check = pd.read_csv(DB_FILE, sep=';')
+                    data_check = pd.read_csv(DB_FILE, sep=';', encoding='utf-8-sig')
                     if not data_check.empty:
                         poids_hist = pd.to_numeric(data_check['Poids'], errors='coerce')
                         hg_hist = pd.to_numeric(data_check['HG'], errors='coerce')
@@ -349,13 +349,29 @@ with tabs[0]:
                     lc_cornes, lt_tete, lt_la, lo_lo, lo_la, tc, ly, ts, ps, lg, ll, wilaya_sel, commune_sel, 
                     ration_estim
                 ]
-                pd.DataFrame([row], columns=COLONNES).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
                 
+                # SÉCURITÉ EXCEL : Si le fichier a été supprimé par mégarde, on réécrit l'en-tête propre
+                if not os.path.exists(DB_FILE):
+                    pd.DataFrame(columns=COLONNES).to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
+                
+                # Enregistrement de la nouvelle ligne (séparateur POINT-VIRGULE STRICT pour Excel)
+                pd.DataFrame([row]).to_csv(DB_FILE, mode='a', header=False, index=False, sep=';', encoding='utf-8-sig')
+                
+                # 🛠️ CONVERTISSEUR DE SAUVEGARDE AUTOMATIQUE EN COLOUNES EXCEL (Intégré sans erreur)
+                try:
+                    df_verif = pd.read_csv(DB_FILE, sep=None, engine='python', encoding='utf-8-sig')
+                    if df_verif.shape[1] == 1:  # Si tout est coincé sur 1 seule colonne
+                        df_nettoye = pd.read_csv(DB_FILE, sep=r'[,,\t]', engine='python', encoding='utf-8-sig')
+                        df_nettoye.to_csv(DB_FILE, index=False, sep=';', encoding='utf-8-sig')
+                except:
+                    pass
+
                 # Réinitialisation propre
                 st.session_state.step = 1
                 st.session_state.mesures_ia = {k: 0.0 for k in st.session_state.mesures_ia}
                 st.success(f"✅ Fiche de l'animal {id_f} validée et ajoutée au registre !")
                 st.rerun()
+
 # --- ONGLET 2 : HISTORIQUE DE TERRAIN ---
 with tabs[1]:
     st.subheader("📋 Gestion de la base de données")
